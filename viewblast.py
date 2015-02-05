@@ -10,14 +10,16 @@ import argparse
 import xml.etree.ElementTree as ET
 
 parser = argparse.ArgumentParser(description='View the XML blast results')
-parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
 command_subparser = parser.add_subparsers(help="View mode")
 
 contig_parser = command_subparser.add_parser("contig",help="View a result's contig");
 contig_parser.add_argument("index", type=int);
+contig_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
 
 list_parser = command_subparser.add_parser("list",help="List the results");
 list_parser.add_argument("-n", "--max", type=int, help="Number of records to show");
+list_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
+
 
 def fetchContig(accession):
     r = requests.get("http://www.ncbi.nlm.nih.gov/sviewer/viewer.cgi?sendto=on&dopt=fasta&val=%s" % accession);
