@@ -13,7 +13,7 @@ Note: all of these commands are formatted to run on a unix/linux machine.. for a
 
 http://www.ncbi.nlm.nih.gov/protein/263970?report=fasta
 
-#Find all stored sequences that look like our opsin (in calanus finmarchigus)
+#Find all stored sequences that look like our opsin (in Calanus finmarchicus)
 ./blast.py --entrez="txid6837[orgn]" tblastn tsa_nt opsin.fasta > out.blast
 
 #Show the first 5
