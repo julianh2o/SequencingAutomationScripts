@@ -1,3 +1,14 @@
+Setup
+-----
+First of all, these scripts require python3. Download it if you don't already have access to it: https://www.python.org/downloads/
+
+Furthermore, these scripts require the requests module, your best bet is to install them via pip: 
+python3 -m pip install requests
+
+or in some cases just pip install requests
+
+Examples
+--------
 Note: all of these commands are formatted to run on a unix/linux machine.. for a windows friendly command line example see below...
 
 http://www.ncbi.nlm.nih.gov/protein/263970?report=fasta
