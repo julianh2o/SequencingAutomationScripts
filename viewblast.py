@@ -14,7 +14,7 @@ command_subparser = parser.add_subparsers(help="View mode")
 
 info_parser = command_subparser.add_parser("info",help="View a single result");
 info_parser.add_argument("index", type=int);
-info_parser.add_argument("-f","--format", help="Format of the response", default="{accession}");
+info_parser.add_argument("-f","--format", help="Format of the response", default="{Hit_accession}");
 info_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
 
 contig_parser = command_subparser.add_parser("contig",help="View a result's contig");
@@ -22,6 +22,7 @@ contig_parser.add_argument("index", type=int);
 contig_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
 
 list_parser = command_subparser.add_parser("list",help="List the results");
+list_parser.add_argument("-f","--format", help="Format of the response", default="{Hit_id}\t{Hit_def}\t{Hit_hsps/Hsp/Hsp_evalue}\t{Hit_accession}");
 list_parser.add_argument("-n","--max", type=int, help="Number of records to show");
 list_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
 
@@ -46,6 +47,14 @@ def formatTable(output):
             print(d.ljust(lengths[i]+3),end='');
             i += 1;
         print();
+
+def doFormat(formatString,alignment):
+    formatString = formatString.replace("{e}","{Hit_hsps/Hsp/Hsp_evalue}");
+    def replacementFunction(match):
+        return alignment.find(match.group(1)).text;
+    formatString = re.sub("{(.*?)}",replacementFunction,formatString);
+    return formatString;
+
             
 def info(args):
     results = args.blast.read();
@@ -60,7 +69,7 @@ def info(args):
         evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
         if (i == args.index):
             fstring = args.format;
-            fstring = fstring.replace("{accession}",accession);
+            fstring = doFormat(fstring,alignment);
             print(fstring);
             exit(0);
         i += 1
@@ -96,7 +105,9 @@ def list(args):
         hitdef = alignment.find("Hit_def").text;
         accession = alignment.find("Hit_accession").text;
         evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
-        output.append((hitid,hitdef,evalue,accession));
+        fstring = args.format;
+        fstring = doFormat(fstring,alignment);
+        output.append(fstring.split("\t"));
         if (i == args.max): break;
         i+=1;
     formatTable(output);
