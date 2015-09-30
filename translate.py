@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser(description='Translate DNA/RNA sequence into a 
 parser.add_argument("-a", dest="showAll", action="store_const", const=True, default=False,help='show all possible translation')
 parser.add_argument('file', metavar="FILE", type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='input sequence')
 parser.add_argument('-f', dest="readingFrameOnly", action="store_const", const=True, default=False,help='show only the largest reading frame')
+parser.add_argument('-w', "--warn",dest="warnLength", type=int, default=100,help='warn to stderr if there are any reading frames other than the longest longer than this number')
 
 mapping = {"UUU":"F", "UUC":"F", "UUA":"L", "UUG":"L",
     "UCU":"S", "UCC":"S", "UCA":"S", "UCG":"S",
@@ -132,23 +133,36 @@ def main():
     if (isDna):
         sequence = dnaToRna(sequence);
 
-    best = None;
+    allTranslated = [];
     for name,seq in permute(sequence):
         translated = translate(seq);
         unbrokenLength = countWithoutStop(translated);
-        if (args.showAll):
+        allTranslated.append((unbrokenLength,name,translated));
+
+    def getKey(item):
+        return item[0];
+    allTranslated.sort(key=getKey,reverse=True);
+    
+    for trans in allTranslated[1:]:
+        unbrokenLength, name, translated = trans;
+        if (unbrokenLength >= args.warnLength):
+            name,_,_ = header.partition(" ");
+            name = name.strip(">");
+            sys.stderr.write("Translate: long frame detected in %s length:%d (longest: %d)\n" % (name,unbrokenLength,allTranslated[0][0]));
+
+    if (args.readingFrameOnly):
+        if (header): print(header,"[longest reading frame only]");
+        print(extractLongestReadingFrame(allTranslated[0][2]));
+    elif (not args.showAll):
+        if (header): print(header);
+        print(allTranslated[0][2]);
+    else:
+        #showall
+        for trans in allTranslated:
+            unbrokenLength, name, translated = trans;
             print("Frame %s (max length %d)" % (name,unbrokenLength));
             if (header): print(header)
             print(translated);
             print();
-        if (best is None or unbrokenLength > best[0]):
-            best = (unbrokenLength,name,translated);
-
-    if (args.readingFrameOnly):
-        if (header): print(header,"[longest reading frame only]");
-        print(extractLongestReadingFrame(best[2])[:-1]); #trim the stop codon off
-    elif (not args.showAll):
-        if (header): print(header);
-        print(best[2]);
 
 main();

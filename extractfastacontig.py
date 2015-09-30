@@ -13,4 +13,4 @@ for line in sys.stdin:
     if (accum is not None):
         accum += line;
 
-print(accum,end="");
+if (accum is not None): print(accum,end="");
