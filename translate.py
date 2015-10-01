@@ -110,11 +110,23 @@ def countWithoutStop(translated):
     return maxCount;
 
 def extractLongestReadingFrame(translated):
-    longest = None;
-    for m in re.finditer("M.*?\*",translated):
-        if (not longest or len(longest) < len(m.group(0))):
-            longest = m.group(0);
-    return longest;
+    frames = []
+    split = translated.split("*");
+    for index in range(split.__len__()):
+        tok = split[index]
+        if (index == 0):
+            frames.append((tok.__len__(),index,tok));
+        elif ("M" in tok):
+            first = tok.index("M")
+            frame = tok[first:];
+            frames.append((frame.__len__(),index,frame));
+
+    def getKey(item):
+        return item[0];
+    frames.sort(key=getKey,reverse=True);
+
+    for size,index,frame in frames:
+        return frame;
 
 def main():
     args = parser.parse_args()
