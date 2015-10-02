@@ -1,4 +1,5 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python
+
 import requests
 import sys
 import time
