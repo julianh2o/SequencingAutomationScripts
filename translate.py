@@ -4,12 +4,19 @@ import re
 import sys
 import fileinput
 import argparse
+import util
+from argparse import RawTextHelpFormatter
 
-parser = argparse.ArgumentParser(description='Translate DNA/RNA sequence into a protein sequence')
+help="""
+Translate DNA/RNA sequence into a protein sequence
+"""
+
+parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument("-a", dest="showAll", action="store_const", const=True, default=False,help='show all possible translation')
 parser.add_argument('file', metavar="FILE", type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='input sequence')
 parser.add_argument('-f', dest="readingFrameOnly", action="store_const", const=True, default=False,help='show only the largest reading frame')
-parser.add_argument('-w', "--warn",dest="warnLength", type=int, default=100,help='warn to stderr if there are any reading frames other than the longest longer than this number')
+parser.add_argument('-w', "--warn",dest="warnLength", default="50%",help='warn to stderr if there are any reading frames other than the longest longer than this number (or percent of the longest)')
+parser.add_argument("--wrap",dest="wrap", type=int, default="60",help='Wrap the fasta to this width')
 
 mapping = {"UUU":"F", "UUC":"F", "UUA":"L", "UUG":"L",
     "UCU":"S", "UCC":"S", "UCA":"S", "UCG":"S",
@@ -157,17 +164,22 @@ def main():
     
     for trans in allTranslated[1:]:
         unbrokenLength, name, translated = trans;
-        if (unbrokenLength >= args.warnLength):
+        longest = allTranslated[0][0]
+        warnSize = args.warnLength.strip();
+        if args.warnLength.endswith("%"):
+            warnSize = longest * float(warnSize.strip("%"))/100
+        warnSize = int(warnSize)
+        if (unbrokenLength >= warnSize):
             name,_,_ = header.partition(" ");
             name = name.strip(">");
             sys.stderr.write("Translate: long frame detected in %s length:%d (longest: %d)\n" % (name,unbrokenLength,allTranslated[0][0]));
 
     if (args.readingFrameOnly):
         if (header): print(header,"[longest reading frame only]");
-        print(extractLongestReadingFrame(allTranslated[0][2]));
+        print(util.wrap(extractLongestReadingFrame(allTranslated[0][2]),args.wrap));
     elif (not args.showAll):
         if (header): print(header);
-        print(allTranslated[0][2]);
+        print(util.wrap(allTranslated[0][2],args.wrap));
     else:
         #showall
         for trans in allTranslated:
