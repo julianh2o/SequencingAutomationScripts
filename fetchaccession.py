@@ -4,6 +4,14 @@ import requests
 import sys
 import time
 import argparse
+from argparse import RawTextHelpFormatter
+
+help="""
+Fetch the sequence from NCBI for the given accession number
+"""
+
+parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
+parser.add_argument("accession", nargs='?', default=sys.stdin, action=StreamType)
 
 #http://stackoverflow.com/questions/19966519/argparse-optional-stdin-argument
 class StreamType(argparse.Action):
@@ -13,8 +21,6 @@ class StreamType(argparse.Action):
         except AttributeError:
             setattr(namespace, self.dest, values)
 
-parser = argparse.ArgumentParser(description='Fetch the sequence from NCBI for the given accession number')
-parser.add_argument("accession", nargs='?', default=sys.stdin, action=StreamType)
 
 args = parser.parse_args()
 

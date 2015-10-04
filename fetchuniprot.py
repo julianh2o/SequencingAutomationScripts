@@ -8,6 +8,7 @@ import sys
 import os.path
 import argparse
 import xml.etree.ElementTree as ET
+from argparse import RawTextHelpFormatter
 
 
 help="""

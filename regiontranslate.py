@@ -8,6 +8,7 @@ import colorama
 import re
 from formatmafft import parseRegionInfo
 from formatmafft import parseFasta
+from argparse import RawTextHelpFormatter
 
 help="""
 Converts a region definition file from one reference to another

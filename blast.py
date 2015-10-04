@@ -7,8 +7,13 @@ import time
 import sys
 import os.path
 import argparse
+from argparse import RawTextHelpFormatter
 
-parser = argparse.ArgumentParser(description='Performs a blast using NCBI\'s web tool')
+help="""
+Performs a blast using NCBI\'s web tool
+"""
+
+parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument('program', help='program: blastn blastp blastx tblastn tblastx')
 parser.add_argument('database', help='database: nr refseq_rna refseq_genomic chromosome est gss htgs pat pdb alu dbsts Whole_Genome_Shotgun_contigs tsa_nt rRNA_typestrains/prokaryotic_16S_ribosomal_RNA')
 parser.add_argument('--rid', help='retrieve results for an existing blast by rid')

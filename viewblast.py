@@ -8,8 +8,13 @@ import sys
 import os.path
 import argparse
 import xml.etree.ElementTree as ET
+from argparse import RawTextHelpFormatter
 
-parser = argparse.ArgumentParser(description='View the XML blast results')
+help="""
+View the XML blast results
+"""
+
+parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 command_subparser = parser.add_subparsers(help="View mode")
 
 info_parser = command_subparser.add_parser("info",help="View a single result");

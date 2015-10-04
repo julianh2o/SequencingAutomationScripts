@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 import sys
 import argparse
+from argparse import RawTextHelpFormatter
 
-parser = argparse.ArgumentParser(description='Extracts a sequence from a fasta file by comparing to the header')
+help="""
+Extracts a sequence from a fasta file by comparing to the header
+"""
+
+parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument('fasta', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the FASTA database')
 
 args = parser.parse_args()
