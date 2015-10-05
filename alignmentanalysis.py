@@ -18,6 +18,7 @@ Reports useful statistics on a mafft alignment
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument('fasta', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the MAFFT aligned FASTA sequence(s)')
 parser.add_argument('-p', "--percent", action="store_const", const=True, default=False,help='Displays the values as a percent of the length of the sequence')
+parser.add_argument('-t', "--tsv", action="store_const", const=True, default=not sys.stdout.isatty(),help='Outputs as a TSV instead of a formatted output')
 
 def asPercent(a,b):
     return "{0:.2f}%".format(a/b * 100) 
@@ -82,7 +83,11 @@ def main():
                 a = stat[f]
             row.append(a)
         tabular.append(row)
-    formatTable(tabular)
+    if args.tsv:
+        for item in tabular:
+            print("\t".join(map(str,item)))
+    else:
+        formatTable(tabular)
         
 
 if __name__ == "__main__":
