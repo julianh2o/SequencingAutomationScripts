@@ -66,6 +66,8 @@ def info(args):
 
     rootNode = ET.fromstring(results);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
+    if (len(alignments) == 0):
+        sys.exit(0)
     i = 1;
     for alignment in alignments:
         hitid = alignment.find("Hit_id").text;
@@ -85,6 +87,8 @@ def contig(args):
 
     rootNode = ET.fromstring(results);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
+    if (len(alignments) == 0):
+        sys.exit(0)
     i = 1;
     for alignment in alignments:
         hitid = alignment.find("Hit_id").text;
@@ -102,6 +106,8 @@ def list(args):
     results = args.blast.read();
     rootNode = ET.fromstring(results);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
+    if (len(alignments) == 0):
+        sys.exit(0)
 
     output = [];
     i = 0;
