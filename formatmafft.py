@@ -111,7 +111,7 @@ def isSimilar(a,b):
 
 def appendMatchStyle(style,c,orig,ss,isReference):
     if (c == "-"): return style
-    if (isReference or (ss.similar is not None and isSimilar(c,orig) and c != orig)):
+    if (ss.similar is not None and (isReference or (isSimilar(c,orig) and c != orig))):
         style = style.add(ss.similar)
     elif (c != orig):
         style = style.add(ss.nonmatch)
