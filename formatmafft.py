@@ -224,7 +224,10 @@ class Bunch(dict):
     __getattr__, __setattr__ = dict.get, dict.__setitem__
 
 def parseColorString(colorString):
-    tokens = re.split("[ \n]",colorString)
+    if ("\n" in colorString):
+        tokens = colorString.split("\n");
+    else:
+        tokens = colorString.split(" ");
     colors = []
     for tok in tokens:
         tok,_,_ = tok.partition("#");
