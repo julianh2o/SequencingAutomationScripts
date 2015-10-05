@@ -15,10 +15,6 @@ help="""
 Fetch location information from swissprot for coloring alignments
 """
 
-parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
-parser.add_argument("accession", nargs='?', default=sys.stdin, action=StreamType)
-parser.add_argument("-m","--match",default=None, help='Match only a specific type of section (string match)');
-
 #http://stackoverflow.com/questions/19966519/argparse-optional-stdin-argument
 class StreamType(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -26,6 +22,11 @@ class StreamType(argparse.Action):
             setattr(namespace, self.dest, values.readline().strip())
         except AttributeError:
             setattr(namespace, self.dest, values)
+
+
+parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
+parser.add_argument("accession", nargs='?', default=sys.stdin, action=StreamType)
+parser.add_argument("-m","--match",default=None, help='Match only a specific type of section (string match)');
 
 
 args = parser.parse_args();
