@@ -20,14 +20,24 @@ parser.add_argument('-f', "--fastaout", action="store_const", const=True, defaul
 parser.add_argument("--wrap",dest="wrap", type=int, default="60",help='Wrap the fasta to this width')
 parser.add_argument('-C', "--colors", nargs="?", default=None, help='Provide custom colors in the format "255,0,255 0,255,255"')
 
+parser.add_argument('-n', dest="nomatch", default="none",help='Show nonmatching proteins')
 parser.add_argument('-s', dest="similar", action="store_const", const=True, default=False,help='Show similar proteins')
 parser.add_argument('-a', dest="coloraminoacids", action="store_const", const=True, default=False,help='Color amino acids according to their group')
 
-parser.add_argument('-m', "--motifs", type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='Provide a regions file for coloration')
+parser.add_argument('-m', "--motifs", type=argparse.FileType('r'), nargs="?", help='Provide a regions file for coloration')
 parser.add_argument('-c', "--capitalization", type=argparse.FileType('r'), nargs="?", help='Provides a region file for capitalization')
 parser.add_argument('-b', "--bold", type=argparse.FileType('r'), nargs="?", help='Provides a region file for bolding')
 parser.add_argument('-u', "--underline", type=argparse.FileType('r'), nargs="?", help='Provides a region file for underline')
 parser.add_argument('-i', "--italics", type=argparse.FileType('r'), nargs="?", help='Provides a region file for italics')
+
+def rtf_encode_char(unichar):
+    code = ord(unichar)
+    if code < 128:
+        return str(unichar)
+    return '\\u' + str(code if code <= 32767 else code-65536) + '?'
+
+def rtf_encode(unistr):
+    return ''.join(rtf_encode_char(c) for c in unistr)
 
 #('green',         0,  255,   0 ),
 #('darkblue',     0,    0, 128 ),
@@ -113,7 +123,7 @@ def appendMatchStyle(style,c,orig,ss,isReference):
     if (c == "-"): return style
     if (ss.similar is not None and (isReference or (isSimilar(c,orig) and c != orig))):
         style = style.add(ss.similar)
-    elif (c != orig):
+    elif (c != orig and ss.nonmatch is not None):
         style = style.add(ss.nonmatch)
     return style
 
@@ -208,6 +218,10 @@ def rtfStyle(a,style):
         else:
             a = a.lower()
 
+    a = a.replace("{","\\{")
+    a = a.replace("}","\\}")
+    a = rtf_encode(a);
+
     out = ""
     if (style["italics"]): out += r"\i"
     if (style["bold"]): out += r"\b"
@@ -241,7 +255,15 @@ def generateStyle(rtf,args):
     if (rtf):
         style.default = Style();
         style.similar = None;
-        style.nonmatch = Style({"bold":True})
+        style.nonmatch = None;
+
+        if args.nomatch == "bold":
+            Style({"bold":True})
+        if args.nomatch == "bg":
+            Style({"background":0})
+        if args.nomatch == "both":
+            Style({"bold":True,"background":0})
+
         if args.capitalization: style.default["capitalize"]=False;
         if args.similar:
             style.default["foreground"]=2
