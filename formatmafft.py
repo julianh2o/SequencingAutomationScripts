@@ -228,7 +228,8 @@ def parseColorString(colorString):
     colors = []
     for tok in tokens:
         tok,_,_ = tok.partition("#");
-        if (tok.strip().__len__() == 0): continue;
+        tok = tok.strip()
+        if (tok.__len__() == 0): continue;
         colors.append([int(numeric_string) for numeric_string in tok.split(",")])
     return colors
 
