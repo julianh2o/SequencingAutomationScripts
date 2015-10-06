@@ -9,6 +9,31 @@ from argparse import RawTextHelpFormatter
 
 help="""
 Translate DNA/RNA sequence into a protein sequence
+
+Translates the sequence and displays only the translation with the longest unbroken sequence
+Note: a warning is generated for any unbroken sequences that are longer than 50% of the longest
+    translate.py sequence.fasta
+
+Translates the sequence and displays all possible translations
+    translate.py sequence.fasta -a
+
+Traslates the sequence and then extracts the open reading frame
+    translate.py sequence.fasta -f
+
+Translates the sequence but wraps to 80 characters instead of 60
+    translate.py sequence.fasta --wrap 80
+
+Translates the sequence and does not wrap the output
+    translate.py sequence.fasta --wrap 0
+
+Translates the sequence and echos a warning to stderr for any sequences that are longer than 100 amino acids
+    translate.py sequence.fasta -w 100
+
+Translates the sequence and echos a warning to stderr for any sequences that are longer than 25% of the longest sequence
+    translate.py sequence.fasta -w 25%
+
+Translates the sequence provided on stdin
+    cat sequence.fasta | translate.py
 """
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)

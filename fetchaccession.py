@@ -7,7 +7,13 @@ import argparse
 from argparse import RawTextHelpFormatter
 
 help="""
-Fetch the sequence from NCBI for the given accession number
+Fetch the fastsa entry from NCBI for the given accession number
+
+Loads the fasta file from NCBI for a given accession number
+    fetchaccession.py AAN12345
+
+The accession number can also be provided by piping
+    echo "AAN12345" | fetchaccession.py
 """
 
 #http://stackoverflow.com/questions/19966519/argparse-optional-stdin-argument

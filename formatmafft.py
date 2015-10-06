@@ -9,7 +9,49 @@ import re
 from argparse import RawTextHelpFormatter
 
 help="""
-Formats a MAFFT fasta
+Formats a MAFFT aligned fasta file
+
+Performs the most basic formatting aligning 60 characters at a time
+    formatmafft.py input.fasta -o output.rtf
+
+Formats as alignment and colors regions based on information in transmembrane.tsv
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv
+
+As above, but also capitalize the highlighted regions and lowercases everything else
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -c transmembrane.tsv
+
+Formats aligned with bold showing which amino acids don't match the reference
+    formatmafft.py input.fasta -o output.rft -n bold
+
+Formats aligned with colored regions, non-matching amino acids within the regions are given a white background
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -n bg
+
+As above, but non-matching amino acids are also bolded
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -n both
+
+Greys out matching amino acids, colors similar amino acids black, and non-similar ones bold
+    formatmafft.py input.fasta -o output.rft -s
+
+Underlines the repeats stored in repeats.tsv
+    formatmafft.py input.fasta -o output.rft -u repeats.tsv
+
+Formats as a fasta file with colored sections according to the regions file
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -f
+
+Formats aligned but displays a color based on the individual amino acid
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -a
+
+Provides a custom color pallet for coloring the regions, in the example red, green, blue
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv --colors '255,0,0 0,255,0 0,0,255'
+
+Provides a custom color pallet that is loaded from the file colors.txt (can be separeted by newlines and commented with #s)
+    formatmafft.py input.fasta -o output.rft -m trasnmembrane.tsv --colors colors.txt
+
+Colors regions from stdin instead of from a file
+    fetchuniprot.py P35500 -m transmem | formatmafft.py input.fasta -o output.rft -m -
+
+Combines many features, output in fasta format and is colored and capitalized by section, repeats are underlined, amino acids colored and bolded based on matches
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -c transmembrane.tsv -u repeats -a -f -n bold
 """
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
@@ -20,7 +62,7 @@ parser.add_argument('-f', "--fastaout", action="store_const", const=True, defaul
 parser.add_argument("--wrap",dest="wrap", type=int, default="60",help='Wrap the fasta to this width')
 parser.add_argument('-C', "--colors", nargs="?", default=None, help='Provide custom colors in the format "255,0,255 0,255,255"')
 
-parser.add_argument('-n', dest="nomatch", default="none",help='Show nonmatching proteins')
+parser.add_argument('-n', dest="nomatch", default="none",help='Show nonmatching proteins (accepts "none", "bg", or "both"')
 parser.add_argument('-s', dest="similar", action="store_const", const=True, default=False,help='Show similar proteins')
 parser.add_argument('-a', dest="coloraminoacids", action="store_const", const=True, default=False,help='Color amino acids according to their group')
 

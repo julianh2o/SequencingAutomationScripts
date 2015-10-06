@@ -10,12 +10,23 @@ import argparse
 from argparse import RawTextHelpFormatter
 
 help="""
-Performs a blast using NCBI\'s web tool
+Performs a blast using Flybase\'s web tool
+
+Note: this program uses "dmel" and "drosphilia" as org and tax respectively
+
+Perform a blast and get XML result
+    flybase.py blasn org/translation query.fasta > result.blast
+
+Perform a blast using piped data
+    extractfastaseq.py input.fasta -n 1 | flybase.py blasn org/translation > result.blast
+
+Perform a blast and immediately return the first result info
+    flybase.py blasn org/translation query.txt | viewblast.py into 1
 """
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument('program', help='program: blastn blastp blastx tblastn tblastx')
-parser.add_argument('database', help='database: nr refseq_rna refseq_genomic chromosome est gss htgs pat pdb alu dbsts Whole_Genome_Shotgun_contigs tsa_nt rRNA_typestrains/prokaryotic_16S_ribosomal_RNA')
+parser.add_argument('database', help='database')
 parser.add_argument('fasta', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the FASTA sequence(s)')
 
 def extractBlastInfo(responseText):

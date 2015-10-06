@@ -4,7 +4,36 @@ import argparse
 from argparse import RawTextHelpFormatter
 
 help="""
-Extracts a sequence from a fasta file by comparing to the header
+Extracts sequences from a fasta file
+
+Outputs a single fasta entry with the header that contains a string
+    extractfastaseq.py input.fasta TR3733
+
+Outputs the first fasta sequence in the file
+    extractfastaseq.py input.fasta -n 1
+
+Outputs the number of fasta sequences in the given file (may take time to run on large files)
+    extractfastaseq.py input.fasta -c
+
+Outputs one fasta entry per line with "###" delimiting the header from the sequence
+eg: >TR3733|c0_g1_i5len=6587path=[###MDDSRVGSPNGSLDGGVI..
+    extractfastaseq.py input.fasta -l
+
+Iterates over each fasta sequence in your file
+    extractfastaseq.py input.fasta -l | while read line
+    do
+        HEAD=`echo -n $line | awk -F'###' '{print $1}'
+        SEQ=`echo -n $line | awk -F'###' '{print $2}'
+
+        #do something with the fasta here
+    done
+
+Iterate through the numbers between 2 and the number of fasta sequences
+(useful for remapping regions)
+    seq `extractfastaseq.py input.fasta -c` | while read n
+    do
+        echo $n
+    done
 """
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
@@ -40,11 +69,12 @@ def main():
     if (args.list):
         for head,seq in fasta(args.fasta):
             print("%s###%s" % (head,seq));
+        sys.exit(0)
     if (args.count):
         i=1
         for head,seq in fasta(args.fasta):
             i+=1
-        print(i)
+        print(i-1)
         sys.exit(0)
     if (args.extractByIndex):
         i=1

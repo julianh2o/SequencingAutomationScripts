@@ -12,7 +12,19 @@ from argparse import RawTextHelpFormatter
 
 
 help="""
-Fetch location information from swissprot for coloring alignments
+Fetch region information from swissprot for coloring alignments
+
+List all region information that swissprot has on a specific accession number
+    fetchuniprot.py P35500
+
+Filter out only the transmembrane regions
+    fetchuniprot.py P35500 -m transmem
+
+Filter out only the repeats
+    fetchuniprot.py P35500 -m repeat
+
+Accession number can be piped to this command
+    echo "P35500" | fetchuniprot.py -m repeat
 """
 
 #http://stackoverflow.com/questions/19966519/argparse-optional-stdin-argument

@@ -12,13 +12,30 @@ from argparse import RawTextHelpFormatter
 
 help="""
 Converts a region definition file from one reference to another
+
+Remaps the region to the second sequence using the first as a reference
+    remapregion.py regions.tsv aligned.fasta > newreference.tsv
+
+Remmaps the region to the third sequence using the first as a reference
+    remapregion.py regions.tsv aligned.fasta -d 3 > newreference.tsv
+
+Remaps the region to the first sequence's frame using the third sequence as a reference
+    remapregion.py regions.tsv aligned.fasta -d 1 -s 3 > newreference.tsv
+
+Remaps from the first sequence to the second
+Then generates newreference.fasta that excludes the first sequence
+Finally formats the alignment using the new regions (the same amino acids will be highlighted, but the original reference is not used)
+    remapregion.py regions.tsv aligned.fasta > newregions.tsv
+    extractfastaseq.py aligned.fasta -l | tail -n +2 | sed 's/###/\n/' > newreference.fasta
+    formatmafft.py newreference.fasta -o output.rtf -m newregions.txt
+
 """
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument('regions', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='The region file to translate')
 parser.add_argument('fasta', type=argparse.FileType('r'), help='The aligned fasta file to use')
-parser.add_argument('-s', '--source', type=int,default=1,help='The index of the old reference sequence (first sequence is 1)')
-parser.add_argument('-d', '--dest', type=int,default=2,help='The index of the new reference sequence (first sequence is 1)')
+parser.add_argument('-s', '--source', type=int,default=1,help='[default: 1] The index of the old reference sequence (first sequence is 1)')
+parser.add_argument('-d', '--dest', type=int,default=2,help='[default: r] The index of the new reference sequence (first sequence is 1)')
 
 class Bunch(dict):
     __getattr__, __setattr__ = dict.get, dict.__setitem__

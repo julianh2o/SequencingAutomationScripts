@@ -13,6 +13,20 @@ from viewblast import formatTable
 
 help="""
 Reports useful statistics on a mafft alignment
+
+Examples:
+Display statistics for an existing fasta file
+    alignmentanalysis.py aligned.fasta
+
+Display statistics as percentages of the aligned sequence length
+(Note: this uses the aligned length, including the missing amino acids)
+    alignmentanalysis.py aligned.fasta -p
+
+Display statistics directly out of mafft
+    mafft unaligned.fasta | alignmentanalysis.py
+
+Use the -t switch to create a TSV, this is most suitable to output to a file
+    alignmentanalysis.py aligned.fasta -t > stats.tsv
 """
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)

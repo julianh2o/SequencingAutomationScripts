@@ -11,6 +11,9 @@ from argparse import RawTextHelpFormatter
 
 help="""
 Performs a blast using NCBI\'s web tool
+
+NOTE: if you are using BLAST+, this tool is obsolete
+Use instead the -remote switch for BLAST+ to perform these searches against NCBIs online database
 """
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
