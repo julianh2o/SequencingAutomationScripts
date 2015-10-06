@@ -4,7 +4,6 @@ import time
 import sys
 import os.path
 import argparse
-import colorama
 import re
 from argparse import RawTextHelpFormatter
 
@@ -294,24 +293,25 @@ def parseColorString(colorString):
 
 def generateStyle(rtf,args):
     style = Bunch()
+    style.default = Style();
+    style.similar = None;
+    style.nonmatch = None;
+
+    if args.nomatch == "bold":
+        Style({"bold":True})
+    if args.nomatch == "bg":
+        Style({"background":0})
+    if args.nomatch == "both":
+        Style({"bold":True,"background":0})
+
+    if args.capitalization: style.default["capitalize"]=False;
+    if args.similar:
+        style.default["foreground"]=2
+        style.similar = Style({"foreground":0})
+        style.nonmatch = Style({"bold":True,"foreground":0})
+
+
     if (rtf):
-        style.default = Style();
-        style.similar = None;
-        style.nonmatch = None;
-
-        if args.nomatch == "bold":
-            Style({"bold":True})
-        if args.nomatch == "bg":
-            Style({"background":0})
-        if args.nomatch == "both":
-            Style({"bold":True,"background":0})
-
-        if args.capitalization: style.default["capitalize"]=False;
-        if args.similar:
-            style.default["foreground"]=2
-            style.similar = Style({"foreground":0})
-            style.nonmatch = Style({"bold":True,"foreground":0})
-
         colorString = "255,255,0 0,255,255 70,228,70 255,0,255 255,0,0 100,100,255"
         if (args.colors is not None):
             if (os.path.exists(args.colors)):
@@ -340,8 +340,12 @@ def generateStyle(rtf,args):
             i+=1
         style.colorTable = colorTable;
     else:
-        style.region = ["yellow", "green", "cyan", "magenta", "red"]
-        style.nonmatch = "blue"
+        for i in range(6):
+            style.region = [];
+            style.region.append(Style({"background":i}));
+
+            style.amino = [];
+            style.amino.append(Style({"foreground":i}));
     return style
 
 def main():
@@ -390,28 +394,10 @@ def main():
         args.output.write(out)
 
     else:
-        coloramaFgColorMapping = {
-            "black":colorama.Fore.BLACK,
-            "red":colorama.Fore.RED,
-            "green":colorama.Fore.GREEN,
-            "yellow":colorama.Fore.YELLOW,
-            "blue":colorama.Fore.BLUE,
-            "magenta":colorama.Fore.MAGENTA,
-            "cyan":colorama.Fore.CYAN,
-            "white":colorama.Fore.WHITE
-        }
+        import colorama
 
-        coloramaBgColorMapping = {
-            "black":colorama.Back.BLACK,
-            "red":colorama.Back.RED,
-            "green":colorama.Back.GREEN,
-            "yellow":colorama.Back.YELLOW,
-            "blue":colorama.Back.BLUE,
-            "magenta":colorama.Back.MAGENTA,
-            "cyan":colorama.Back.CYAN,
-            "white":colorama.Back.WHITE
-        }
-
+        coloramaBgColors = [colorama.Back.YELLOW, colorama.Back.CYAN, colorama.Back.GREEN, colorama.Back.MAGENTA,colorama.back.RED,colorama.Back.BLUE]
+        coloramaFgColors = [colorama.Fore.YELLOW, colorama.Fore.CYAN, colorama.Fore.GREEN, colorama.Fore.MAGENTA,colorama.back.RED,colorama.Fore.BLUE]
         def write(a,fg="black",bg="white"):
             print(coloramaFgColorMapping[fg]+coloramaBgColorMapping[bg]+a+colorama.Fore.RESET+colorama.Back.RESET)
 
