@@ -4,4 +4,5 @@ def wrap(string,width):
     while(string.__len__() > width):
         out += string[:width]+"\n"
         string = string[width:]
+    out += string
     return out
