@@ -37,17 +37,51 @@ def extractBlastInfo(responseText):
             info[mm.group(1)] = mm.group(2);
     return info;
 
+def pretty_print_POST(req):
+    """
+    At this point it is completely built and ready
+    to be fired; it is "prepared".
+
+    However pay attention at the formatting used in 
+    this function because it is programmed to be pretty 
+    printed and may differ from the actual request.
+    """
+    print('{}\n{}\n{}\n\n{}'.format(
+        '-----------START-----------',
+        req.method + ' ' + req.url,
+        '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+        req.body.decode("ascii"),
+    ))
+
+
 def startBlast(program,database,query):
     params = {
-        "program" : program,
-        "database" : database,
-        "sequence" : urllib.parse.quote(query),
-        "org":"dmel",
-        "tax" : "drosophila",
-        "outputformat":"XML"
+        "program" : ('',program),
+        "database" : ('',database),
+        "seqfile" : ('sequence.txt',query),
+#"sequence" : ('',''),
+#"advoptionsopen" : ('','false'),
+#"matrix" : ('','BLOSUM62'),
+#"otheropts" : ('',''),
+#"geneticcodes" : ('','1'),
+#"wordsize" : ('',''),
+#"_lowcomp" : ('',''),
+#"numalignments" : ('','25'),
+#"numdescriptions" : ('','25'),
+#"_legacyengine" : ('',''),
+#"_megablast" : ('',''),
+#"expect" : ('','10'),
+        "org": ('',"dmel"),
+        "tax" : ('',"drosophila"),
+        "outputformat":('',"XML")
     }
 
-    r = requests.post("http://flybase.org/blast/index.html",params=params,allow_redirects=False);
+    req = requests.Request("POST","http://flybase.org/blast/index.html",files=params,headers={
+        'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
+    });
+    prepared = req.prepare()
+    s = requests.Session()
+    r = s.send(prepared,allow_redirects=False);
     url = r.headers["location"];
     return url;
 
