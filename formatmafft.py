@@ -26,7 +26,7 @@ Formats aligned with colored regions, non-matching amino acids within the region
     formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -n bg
 
 As above, but non-matching amino acids are also bolded
-    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -n both
+    formatmafft.py input.fasta -o output.rft -m transmembrane.tsv -n bold,bg
 
 Greys out matching amino acids, colors similar amino acids black, and non-similar ones bold
     formatmafft.py input.fasta -o output.rft -s
@@ -59,9 +59,10 @@ parser.add_argument('-o', "--output", type=argparse.FileType('w'), nargs="?", de
 parser.add_argument('-f', "--fastaout", action="store_const", const=True, default=False, help="Output in a fasta format")
 
 parser.add_argument("--wrap",dest="wrap", type=int, default="60",help='Wrap the fasta to this width')
-parser.add_argument('-C', "--colors", nargs="?", default=None, help='Provide custom colors in the format "255,0,255 0,255,255"')
+parser.add_argument('-C', "--colors", default=None, help='Provide custom colors in the format "255,0,255 0,255,255"')
+parser.add_argument('-A', "--aminocolors", default=None,help='Provide custom colors for amino acids, same format as -C')
 
-parser.add_argument('-n', dest="nomatch", default="none",help='Show nonmatching proteins (accepts "bold", "bg", or "both"')
+parser.add_argument('-n', dest="nomatch", default="",help='Show nonmatching proteins (accepts "bold", "bg", or "amino". values can combined by comma')
 parser.add_argument('-s', dest="similar", action="store_const", const=True, default=False,help='Show similar proteins')
 parser.add_argument('-a', dest="coloraminoacids", action="store_const", const=True, default=False,help='Color amino acids according to their group')
 
@@ -196,8 +197,9 @@ def doAlignmentOutput(sequences,regions,ss,write,args):
                 offset = sequences[0][1][:i+l].count("-")
                 style = appendRegionStyle(style,regions,i+l-offset)
                 style = appendMatchStyle(style,c,sequences[0][1][i+l],ss,isReference)
-                if (args.coloraminoacids):
+                if "amino" in style["special"]:
                     style = appendAminoAcidColoring(style,c,ss);
+                    style["special"].remove("amino")
                 write(c,style)
             write("\n")
             isReference = False;
@@ -222,8 +224,9 @@ def doFastaOutput(sequences,regions,ss,write,args):
                 offset = sequences[0][1][:i].count("-")
                 style = appendRegionStyle(style,regions,i-offset)
                 style = appendMatchStyle(style,c,sequences[0][1][i],ss,isReference)
-                if (args.coloraminoacids):
+                if "amino" in style["special"]:
                     style = appendAminoAcidColoring(style,c,ss);
+                    style["special"].remove("amino")
                 i+=1
                 if (c == "-"): continue;
                 write(c,style)
@@ -240,11 +243,19 @@ class Style(dict):
         self["capitalize"] = None
         self["foreground"] = None; #black
         self["background"] = None; #white
+        self["special"] = [];
 
         self.update(dic)
+        self["special"] = self["special"][:]
+
+        if (isinstance(self["special"],str)):
+            self["special"] = [self["special"]];
     def add(self,addstyle):
         filtered = {k: v for k, v in addstyle.items() if v != None}
+        del filtered["special"]
         self.update(filtered)
+        if addstyle["special"]:
+            self["special"] += addstyle["special"];
         return self;
 
 
@@ -291,18 +302,36 @@ def parseColorString(colorString):
         colors.append([int(numeric_string) for numeric_string in tok.split(",")])
     return colors
 
+def loadColorsOrDefault(argument,default):
+    colorString = default
+    if (argument is not None):
+        if (os.path.exists(argument)):
+            with open(argument,"r") as f:
+                colorString = f.read()
+        else:
+            colorString = argument;
+
+    return parseColorString(colorString);
+        
+
 def generateStyle(rtf,args):
     style = Bunch()
     style.default = Style();
     style.similar = None;
     style.nonmatch = None;
 
-    if args.nomatch == "bold":
-        style.nonmatch = Style({"bold":True})
-    if args.nomatch == "bg":
-        style.nonmatch = Style({"background":0})
-    if args.nomatch == "both":
-        style.nonmatch = Style({"bold":True,"background":0})
+    if (args.coloraminoacids):
+        style.default = style.default.add(Style({"special":"amino"}));
+
+    if args.nomatch:
+        modeStyles = {
+            "bold":Style({"bold":True}),
+            "bg":Style({"background":0}),
+            "amino":Style({"special":"amino"}),
+        }
+        style.nonmatch = Style();
+        for mode in args.nomatch.split(","):
+            style.nonmatch = style.nonmatch.add(modeStyles[mode]);
 
     if args.capitalization: style.default["capitalize"]=False;
     if args.similar:
@@ -310,19 +339,11 @@ def generateStyle(rtf,args):
         style.similar = Style({"foreground":0})
         style.nonmatch = Style({"bold":True,"foreground":0})
 
-
     if (rtf):
-        colorString = "255,255,0 0,255,255 70,228,70 255,0,255 255,0,0 100,100,255"
-        if (args.colors is not None):
-            if (os.path.exists(args.colors)):
-                with open(args.colors,"r") as f:
-                    colorString = f.read()
-            else:
-                colorString = args.colors;
-        
+
         reservedColors = parseColorString("255,255,255 150,150,150")
-        aminoColors = parseColorString("0,255,0 255,255,0 255,0,0 0,0,255")
-        colorList = parseColorString(colorString)
+        aminoColors = loadColorsOrDefault(args.aminocolors,"0,255,0 255,255,0 255,0,0 0,0,255")
+        colorList = loadColorsOrDefault(args.colors,"255,255,0 0,255,255 70,228,70 255,0,255 255,0,0 100,100,255")
         style.region = [];
         style.amino = [];
         i = 1;
