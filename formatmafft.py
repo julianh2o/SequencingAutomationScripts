@@ -61,7 +61,7 @@ parser.add_argument('-f', "--fastaout", action="store_const", const=True, defaul
 parser.add_argument("--wrap",dest="wrap", type=int, default="60",help='Wrap the fasta to this width')
 parser.add_argument('-C', "--colors", nargs="?", default=None, help='Provide custom colors in the format "255,0,255 0,255,255"')
 
-parser.add_argument('-n', dest="nomatch", default="none",help='Show nonmatching proteins (accepts "none", "bg", or "both"')
+parser.add_argument('-n', dest="nomatch", default="none",help='Show nonmatching proteins (accepts "bold", "bg", or "both"')
 parser.add_argument('-s', dest="similar", action="store_const", const=True, default=False,help='Show similar proteins')
 parser.add_argument('-a', dest="coloraminoacids", action="store_const", const=True, default=False,help='Color amino acids according to their group')
 
