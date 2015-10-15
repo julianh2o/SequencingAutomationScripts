@@ -166,7 +166,7 @@ def appendMatchStyle(style,c,orig,ss,isReference,columnMatches):
     if (c == "-"): return style
     if (ss.similar is not None and (isReference or (isSimilar(c,orig) and c != orig))):
         style = style.add(ss.similar)
-    elif (isReference and not columnMatches) or (c != orig and ss.nonmatch is not None):
+    elif ((isReference and not columnMatches) or c != orig) and ss.nonmatch is not None:
         style = style.add(ss.nonmatch)
     return style
 
