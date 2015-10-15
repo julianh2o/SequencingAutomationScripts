@@ -298,11 +298,11 @@ def generateStyle(rtf,args):
     style.nonmatch = None;
 
     if args.nomatch == "bold":
-        Style({"bold":True})
+        style.nonmatch = Style({"bold":True})
     if args.nomatch == "bg":
-        Style({"background":0})
+        style.nonmatch = Style({"background":0})
     if args.nomatch == "both":
-        Style({"bold":True,"background":0})
+        style.nonmatch = Style({"bold":True,"background":0})
 
     if args.capitalization: style.default["capitalize"]=False;
     if args.similar:
