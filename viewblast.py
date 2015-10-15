@@ -11,7 +11,44 @@ import xml.etree.ElementTree as ET
 from argparse import RawTextHelpFormatter
 
 help="""
-View the XML blast results
+This script lets you extract results and information from blast results stored as XML
+
+The format parameter can be any strings. The following sequences can be used to insert record information:
+    {Hit_num} {Hit_id} {Hit_def} {Hit_accession} {Hit_len} {Hit_hsps/Hsp/Hsp_num} {Hit_hsps/Hsp/Hsp_bit-score} {Hit_hsps/Hsp/Hsp_score}
+    {Hit_hsps/Hsp/Hsp_evalue} {Hit_hsps/Hsp/Hsp_query-from} {Hit_hsps/Hsp/Hsp_hit-from} {Hit_hsps/Hsp/Hsp_hit-to}
+    {Hit_hsps/Hsp/Hsp_query-frame} {Hit_hsps/Hsp/Hsp_hit-frame} {Hit_hsps/Hsp/Hsp_identity} {Hit_hsps/Hsp/Hsp_positive}
+    {Hit_hsps/Hsp/Hsp_gaps} {Hit_hsps/Hsp/Hsp_align-len} {Hit_hsps/Hsp/Hsp_qseq} {Hit_hsps/Hsp/Hsp_hseq} {Hit_hsps/Hsp/Hsp_midline}
+
+of particular use are
+    {Hit_num} - replaced with the result number starting at 1
+    {Hit_id} - replaecd with the hit ID. This is often the accession number or contig information but is not necessarily consistent
+    {Hit_def} - replaecd with most of the remaining fasta header, again, this seems to be dependent on the database
+    {Hit_accession} - replaced with the accession number as known by the database, if blasting against NCBI this is a GB accession
+    {e} - replaced with the evalue of the first "sub hit"
+
+Show the accession number and the evalue of the top 5 results separated by commas
+    viewblast.py list out.blast -n 5 -f '{Hit_accession},{e}'
+
+Show the hit number and the accession number of the top 5 results separated by space
+    viewblast.py list out.blast -n 5 -f '{Hit_num} {Hit_accession} {e}'
+
+The tab character has special meaning here. Instead of inserting a tab, this creates a equalized column view for display
+    viewblast.py list out.blast -n 5 -f '{Hit_num}\t{Hit_accession}\t{e}'
+
+Returns the "{Hit_accession}" of the first result
+    viewblast.py info 1 out.blast
+
+Returns only the fasta header "Hit_def" field of the first result
+    viewblast.py info 1 out.blast -f '{Hit_def}'
+
+Returns a list of all result accession numbers from the blast
+    viewblast.py list out.blast -f '{Hit_accession}'
+
+This only works with an NCBI blast, it uses the result Hit_accession number to then look up the contig on GenBank
+    viewblast.py contig 1 out.blast
+
+You can of course, pipe in a blast result directly. This command gets the first 5 results of the blast
+tblastn -db tsa_nt -query query.txt -remote | viewblast.py list -n 5
 """
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
@@ -75,7 +112,7 @@ def info(args):
         accession = alignment.find("Hit_accession").text;
         evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
         if (i == args.index):
-            fstring = args.format;
+            fstring = args.format.replace("\\t","\t");
             fstring = doFormat(fstring,alignment);
             print(fstring);
             exit(0);
@@ -116,7 +153,7 @@ def list(args):
         hitdef = alignment.find("Hit_def").text;
         accession = alignment.find("Hit_accession").text;
         evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
-        fstring = args.format;
+        fstring = args.format.replace("\\t","\t");
         fstring = doFormat(fstring,alignment);
         output.append(fstring.split("\t"));
         if (i == args.max): break;
