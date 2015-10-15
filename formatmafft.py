@@ -161,11 +161,11 @@ def isSimilar(a,b):
         if (a.lower() in group and b.lower() in group): return True
     return False;
 
-def appendMatchStyle(style,c,orig,ss,isReference):
+def appendMatchStyle(style,c,orig,ss,isReference,columnMatches):
     if (c == "-"): return style
     if (ss.similar is not None and (isReference or (isSimilar(c,orig) and c != orig))):
         style = style.add(ss.similar)
-    elif (c != orig and ss.nonmatch is not None):
+    elif (isReference and not columnMatches) or (c != orig and ss.nonmatch is not None):
         style = style.add(ss.nonmatch)
     return style
 
@@ -175,6 +175,13 @@ def appendAminoAcidColoring(style,c,ss):
         if (c.lower() in group):
             style = style.add(ss.amino[i])
     return style
+
+def doesColumnMatch(i,sequences):
+    matches = True;
+    for head,seq in sequences:
+        if (seq[i] != sequences[0][1][i]):
+            matches = False
+    return matches
 
 def doAlignmentOutput(sequences,regions,ss,write,args):
     longestHeader = None
@@ -193,10 +200,11 @@ def doAlignmentOutput(sequences,regions,ss,write,args):
             for l in range(args.wrap):
                 if (i+l >= sequenceLength): break
                 c = seq[i+l]
+                columnMatches = doesColumnMatch(i+l,sequences);
                 style = Style(ss.default)
                 offset = sequences[0][1][:i+l].count("-")
                 style = appendRegionStyle(style,regions,i+l-offset)
-                style = appendMatchStyle(style,c,sequences[0][1][i+l],ss,isReference)
+                style = appendMatchStyle(style,c,sequences[0][1][i+l],ss,isReference,columnMatches)
                 if "amino" in style["special"]:
                     style = appendAminoAcidColoring(style,c,ss);
                     style["special"].remove("amino")
