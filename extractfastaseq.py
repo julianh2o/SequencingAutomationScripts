@@ -12,6 +12,9 @@ Outputs a single fasta entry with the header that contains a string
 Outputs the first fasta sequence in the file
     extractfastaseq.py input.fasta -n 1
 
+Outputs all entries EXCEPT the first fasta sequence in the file
+    extractfastaseq.py input.fasta -r 1
+
 Outputs the number of fasta sequences in the given file (may take time to run on large files)
     extractfastaseq.py input.fasta -c
 
@@ -40,6 +43,7 @@ parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFor
 parser.add_argument('fasta', type=argparse.FileType('r'), nargs="?", help='the FASTA database')
 parser.add_argument('accession', nargs="?", default=sys.stdin, help='The accession number to find')
 parser.add_argument('-n', dest="extractByIndex", type=int, default=None,help='Return the sequence by index number')
+parser.add_argument('-r', dest="removeByIndex", type=int, default=None,help='Returns a fasta file with one of the sequences removed')
 parser.add_argument('-c', dest="count", action="store_const", const=True, default=False,help='Return the number of sequences in the fasta file')
 parser.add_argument('-l', dest="list", action="store_const", const=True, default=False,help='List the fasta output one per line: [header]###[sequence]')
 
@@ -75,6 +79,13 @@ def main():
         for head,seq in fasta(args.fasta):
             i+=1
         print(i-1)
+        sys.exit(0)
+    if (args.removeByIndex):
+        i=1
+        for head,seq in fasta(args.fasta):
+            if (i != args.removeByIndex):
+                print("%s\n%s" % (head,seq));
+            i+=1
         sys.exit(0)
     if (args.extractByIndex):
         i=1

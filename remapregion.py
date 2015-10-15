@@ -26,7 +26,7 @@ Remaps from the first sequence to the second
 Then generates newreference.fasta that excludes the first sequence
 Finally formats the alignment using the new regions (the same amino acids will be highlighted, but the original reference is not used)
     remapregion.py regions.tsv aligned.fasta > newregions.tsv
-    extractfastaseq.py aligned.fasta -l | tail -n +2 | sed 's/###/\n/' > newreference.fasta
+    extractfastaseq.py aligned.fasta -l | tail -n +2 | sed 's/###/\\n/' > newreference.fasta
     formatmafft.py newreference.fasta -o output.rtf -m newregions.txt
 
 """
