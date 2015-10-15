@@ -401,9 +401,9 @@ def main():
 
         out = r"{\rtf1\ansi\ansicpg1252\cocoartf1348\cocoasubrtf170\n{\fonttbl\f0\fswiss\fcharset0 Courier New;}"
         out += r"{\colortbl;%s}" % ss.colorTable
-        out += r"\margl1440\margr1440\vieww12600\viewh7800\viewkind0"
+        out += r"\margl1440\margr720\vieww12240\viewh15840\viewkind0"
         out += r"\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural"
-        out += r"\f0\fs24"
+        out += r"\f0\fs20"
 
         if (args.fastaout):
             doFastaOutput(sequences,regions,ss,write,args)
