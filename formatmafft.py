@@ -203,8 +203,12 @@ def doAlignmentOutput(sequences,regions,ss,write,args):
                 columnMatches = doesColumnMatch(i+l,sequences);
                 style = Style(ss.default)
                 offset = sequences[0][1][:i+l].count("-")
-                style = appendRegionStyle(style,regions,i+l-offset)
-                style = appendMatchStyle(style,c,sequences[0][1][i+l],ss,isReference,columnMatches)
+                if (isReference):
+                    style = appendMatchStyle(style,c,sequences[0][1][i+l],ss,isReference,columnMatches)
+                    style = appendRegionStyle(style,regions,i+l-offset)
+                else:
+                    style = appendRegionStyle(style,regions,i+l-offset)
+                    style = appendMatchStyle(style,c,sequences[0][1][i+l],ss,isReference,columnMatches)
                 if "amino" in style["special"]:
                     style = appendAminoAcidColoring(style,c,ss);
                     style["special"].remove("amino")
@@ -230,8 +234,12 @@ def doFastaOutput(sequences,regions,ss,write,args):
                 style = Style(ss.default)
                 if (ss.capitalization): style["capitalize"] = False;
                 offset = sequences[0][1][:i].count("-")
-                style = appendRegionStyle(style,regions,i-offset)
-                style = appendMatchStyle(style,c,sequences[0][1][i],ss,isReference)
+                if (isReference):
+                    style = appendMatchStyle(style,c,sequences[0][1][i],ss,isReference)
+                    style = appendRegionStyle(style,regions,i-offset)
+                else:
+                    style = appendRegionStyle(style,regions,i-offset)
+                    style = appendMatchStyle(style,c,sequences[0][1][i],ss,isReference)
                 if "amino" in style["special"]:
                     style = appendAminoAcidColoring(style,c,ss);
                     style["special"].remove("amino")
