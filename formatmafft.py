@@ -61,6 +61,7 @@ parser.add_argument('-f', "--fastaout", action="store_const", const=True, defaul
 parser.add_argument("--wrap",dest="wrap", type=int, default="60",help='Wrap the fasta to this width')
 parser.add_argument('-C', "--colors", default=None, help='Provide custom colors in the format "255,0,255 0,255,255"')
 parser.add_argument('-A', "--aminocolors", default=None,help='Provide custom colors for amino acids, same format as -C')
+parser.add_argument('-r', "--reference", type=int, default=1,help='[default: 1] Specify the reference sequence by index')
 
 parser.add_argument('-n', dest="nomatch", default="",help='Show nonmatching proteins (accepts "bold", "bg", or "amino". values can combined by comma')
 parser.add_argument('-s', dest="similar", action="store_const", const=True, default=False,help='Show similar proteins')
@@ -176,10 +177,10 @@ def appendAminoAcidColoring(style,c,ss):
             style = style.add(ss.amino[i])
     return style
 
-def doesColumnMatch(i,sequences):
+def doesColumnMatch(i,sequences,refindex):
     matches = True;
     for head,seq in sequences:
-        if (seq[i] != sequences[0][1][i]):
+        if (seq[i] != sequences[refindex][1][i]):
             matches = False
     return matches
 
@@ -191,38 +192,51 @@ def doAlignmentOutput(sequences,regions,ss,write,args):
     if (longestHeader > 20): longestHeader = 20
 
     i = 0
-    sequenceLength = sequences[0][1].__len__()
+    refindex = args.reference -1
+    sequenceLength = sequences[refindex][1].__len__()
     while(i<sequenceLength):
-        isReference = True;
-        for head,seq in sequences:
+        for n,seqtup in enumerate(sequences):
+            if (n == 0):
+                if (i + args.wrap >= sequenceLength):
+                    missing = args.wrap - (sequenceLength - i);
+                    write("\n%s%d\n" % ("".ljust(longestHeader+args.wrap+3-missing),i+args.wrap-missing));
+                else:
+                    write("\n%s%d\n" % ("".ljust(longestHeader+args.wrap+3),i+args.wrap));
+            head, seq = seqtup
+            isReference = refindex == n;
             head = head[:min(head.__len__(),longestHeader)]
-            write(head.ljust(longestHeader+3))
+            headerstyle = Style(ss.default);
+            if (isReference):
+                headerstyle = headerstyle.add(Style({"bold":True}))
+            write(head.ljust(longestHeader+3),headerstyle)
             for l in range(args.wrap):
                 if (i+l >= sequenceLength): break
                 c = seq[i+l]
-                columnMatches = doesColumnMatch(i+l,sequences);
+                ref = sequences[refindex][1][i+l]
+                columnMatches = doesColumnMatch(i+l,sequences,refindex);
                 style = Style(ss.default)
-                offset = sequences[0][1][:i+l].count("-")
+                offset = sequences[refindex][1][:i+l].count("-")
                 if (isReference):
-                    style = appendMatchStyle(style,c,sequences[0][1][i+l],ss,isReference,columnMatches)
+                    style = appendMatchStyle(style,c,ref,ss,isReference,columnMatches)
                     style = appendRegionStyle(style,regions,i+l-offset)
                 else:
                     style = appendRegionStyle(style,regions,i+l-offset)
-                    style = appendMatchStyle(style,c,sequences[0][1][i+l],ss,isReference,columnMatches)
+                    style = appendMatchStyle(style,c,ref,ss,isReference,columnMatches)
                 if "amino" in style["special"]:
                     style = appendAminoAcidColoring(style,c,ss);
                     style["special"].remove("amino")
                 write(c,style)
             write("\n")
             isReference = False;
-        write("\n")
         i+= args.wrap
 
 ######################
 def doFastaOutput(sequences,regions,ss,write,args):
-    sequenceLength = sequences[0][1].__len__()
-    isReference = True;
-    for head,seq in sequences:
+    refindex = args.reference - 1
+    sequenceLength = sequences[refindex][1].__len__()
+    for i,seqtup in enumerate(sequences):
+        head, seq = seqtup
+        isReference = refindex == i;
         write(head+"\n")
         offset = 0;
         i = 0
@@ -231,15 +245,17 @@ def doFastaOutput(sequences,regions,ss,write,args):
             while(l < args.wrap):
                 if (i >= sequenceLength): break
                 c = seq[i]
+                ref = sequences[refindex][1][i]
+                columnMatches = doesColumnMatch(i,sequences,refindex);
                 style = Style(ss.default)
                 if (ss.capitalization): style["capitalize"] = False;
-                offset = sequences[0][1][:i].count("-")
+                offset = sequences[refindex][1][:i].count("-")
                 if (isReference):
-                    style = appendMatchStyle(style,c,sequences[0][1][i],ss,isReference)
+                    style = appendMatchStyle(style,c,ref,ss,isReference,columnMatches)
                     style = appendRegionStyle(style,regions,i-offset)
                 else:
                     style = appendRegionStyle(style,regions,i-offset)
-                    style = appendMatchStyle(style,c,sequences[0][1][i],ss,isReference)
+                    style = appendMatchStyle(style,c,ref,ss,isReference,columnMatches)
                 if "amino" in style["special"]:
                     style = appendAminoAcidColoring(style,c,ss);
                     style["special"].remove("amino")
