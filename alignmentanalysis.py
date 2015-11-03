@@ -31,6 +31,7 @@ Use the -t switch to create a TSV, this is most suitable to output to a file
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument('fasta', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the MAFFT aligned FASTA sequence(s)')
+parser.add_argument('-r', "--reference", type=int, default=1 ,help='Sets the reference sequence to use for tallying statistics')
 parser.add_argument('-p', "--percent", action="store_const", const=True, default=False,help='Displays the values as a percent of the length of the sequence')
 parser.add_argument('-t', "--tsv", action="store_const", const=True, default=not sys.stdout.isatty(),help='Outputs as a TSV instead of a formatted output')
 
@@ -41,19 +42,20 @@ def main():
     args = parser.parse_args()
 
     stats = [];
-    reference = None;
-    for head,seq in fasta(args.fasta):
-        if reference is not None:
-            matching = 0;
-            similar = 0;
-            different = 0;
-            for i,c in enumerate(seq):
-                if c == reference[i]:
-                    matching += 1;
-                elif isSimilar(c,reference[i]):
-                    similar += 1;
-                else:
-                    different += 1;
+    r = args.reference-1;
+    fastaLines = list(fasta(args.fasta))
+    for index,info in enumerate(fastaLines):
+        head,seq = info;
+        matching = 0;
+        similar = 0;
+        different = 0;
+        for i,c in enumerate(seq):
+            if c == fastaLines[r][1][i]:
+                matching += 1;
+            elif isSimilar(c,fastaLines[r][1][i]):
+                similar += 1;
+            else:
+                different += 1;
 
         if (head.__len__() > 20): head = head[:20]
         seqlen = seq.__len__()
@@ -75,16 +77,13 @@ def main():
                 "alignedlength":seqlen,
                 "sequencelength":seqlen - seq.count("-"),
             }
-            if reference is not None:
-                sstats.update({
-                    "matching":matching,
-                    "similar":similar,
-                    "different":different,
-                });
+            sstats.update({
+                "matching":matching,
+                "similar":similar,
+                "different":different,
+            });
 
         stats.append(sstats);
-        if reference is None:
-            reference = seq
 
     tabular = []
     fields = ["head","alignedlength","sequencelength","matching","similar","different"]
