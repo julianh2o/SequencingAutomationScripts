@@ -38,6 +38,7 @@ Translates the sequence provided on stdin
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument("-a", dest="showAll", action="store_const", const=True, default=False,help='show all possible translation')
+parser.add_argument("-r", "--readingframe", type=int, default=None,help='Choose a specific reading frame only')
 parser.add_argument('file', metavar="FILE", type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='input sequence')
 parser.add_argument('-f', dest="readingFrameOnly", action="store_const", const=True, default=False,help='show only the largest reading frame')
 parser.add_argument('-w', "--warn",dest="warnLength", default="50%",help='warn to stderr if there are any reading frames other than the longest longer than this number (or percent of the longest)')
@@ -181,7 +182,11 @@ def main():
     for name,seq in permute(sequence):
         translated = translate(seq);
         unbrokenLength = countWithoutStop(translated);
-        allTranslated.append((unbrokenLength,name,translated));
+        if args.readingframe:
+            if int(name) == args.readingframe:
+                allTranslated.append((unbrokenLength,name,translated));
+        else:
+            allTranslated.append((unbrokenLength,name,translated));
 
     def getKey(item):
         return item[0];
