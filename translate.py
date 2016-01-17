@@ -42,6 +42,8 @@ parser.add_argument("-r", "--readingframe", type=int, default=None,help='Choose 
 parser.add_argument('file', metavar="FILE", type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='input sequence')
 parser.add_argument('-f', dest="readingFrameOnly", action="store_const", const=True, default=False,help='show only the largest reading frame')
 parser.add_argument('-w', "--warn",dest="warnLength", default="50%",help='warn to stderr if there are any reading frames other than the longest longer than this number (or percent of the longest)')
+parser.add_argument('-g', "--noregen",dest="regenerateFromThreePrime", action="store_const", const=False, default=True,help='Use the same codon groupings rather than regenerating the reading frame from the 3\' end (default is compatible with expasy and blast, with flag is compatible with emboss)')
+parser.add_argument('-o', "--orderByFrame",dest="orderByFrame", action="store_const", const=True, default=False,help='Order by frame index instead of match (used with -a)')
 parser.add_argument("--wrap",dest="wrap", type=int, default="60",help='Wrap the fasta to this width')
 
 mapping = {"UUU":"F", "UUC":"F", "UUA":"L", "UUG":"L",
@@ -67,25 +69,28 @@ def trimTo3(sequence):
     seq = sequence[:-extraCodons];
     return seq;
 
-def genPermutation(sequence,frameIndex,reverse):
+#independentReverseFrame means that we recreate the frame from the 3' end without trimming the overhanging characters
+#use this to be more compatible with ncbi's blast tool
+def genPermutation(sequence,frameIndex,reverse,independentReverseFrame):
     rframeIndex = (len(sequence) - frameIndex) % 3;
     if (reverse):
         sequence = complement(sequence);
         sequence = sequence[::-1]
-        sequence = sequence[rframeIndex:];
+        if (not independentReverseFrame): frameIndex = rframeIndex
+        sequence = sequence[frameIndex:];
     else:
         sequence = sequence[frameIndex:];
 
     return sequence;
 
-def permute(sequence):
+def permute(sequence,independentReverseFrame):
     permutations = [];
-    a = genPermutation(sequence,0,False);
-    b = genPermutation(sequence,1,False);
-    c = genPermutation(sequence,2,False);
-    rca = genPermutation(sequence,0,True);
-    rcb = genPermutation(sequence,1,True);
-    rcc = genPermutation(sequence,2,True);
+    a = genPermutation(sequence,0,False,independentReverseFrame);
+    b = genPermutation(sequence,1,False,independentReverseFrame);
+    c = genPermutation(sequence,2,False,independentReverseFrame);
+    rca = genPermutation(sequence,0,True,independentReverseFrame);
+    rcb = genPermutation(sequence,1,True,independentReverseFrame);
+    rcc = genPermutation(sequence,2,True,independentReverseFrame);
 
     permutations.append(("1",a));
     permutations.append(("2",b));
@@ -103,6 +108,15 @@ def complement(sequence):
         if (c == "C"): compl += "G";
         if (c == "G"): compl += "C";
     return compl;
+
+def subdivide(seq):
+    i = 0;
+    out = "";
+    for c in seq:
+        if (i%3 == 0): out += " ";
+        out += c;
+        i+=1
+    return out
 
 def translate(sequence):
     translated = "";
@@ -178,8 +192,11 @@ def main():
     if (isDna):
         sequence = dnaToRna(sequence);
 
+#print("IN SEQ         ",sequence)
+#print("IN SEQ         ",complement(sequence));
     allTranslated = [];
-    for name,seq in permute(sequence):
+    for name,seq in permute(sequence,args.regenerateFromThreePrime):
+#print("translating",name.ljust(2),subdivide(seq));
         translated = translate(seq);
         unbrokenLength = countWithoutStop(translated);
         if args.readingframe:
@@ -190,7 +207,7 @@ def main():
 
     def getKey(item):
         return item[0];
-    allTranslated.sort(key=getKey,reverse=True);
+    if (not args.orderByFrame): allTranslated.sort(key=getKey,reverse=True);
     
     for trans in allTranslated[1:]:
         unbrokenLength, name, translated = trans;
