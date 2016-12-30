@@ -40,14 +40,13 @@ cat NEW_ACCESSIONS.txt | while read ACC; do
         HEADER=`viewblast.py info $INDEX INITIAL_BLAST.fasta -f '{Hit_accession} {Hit_def} {Hit_hsps/Hsp/Hsp_bit-score} {e} {Hit_hsps/Hsp/Hsp_identity} {Hit_hsps/Hsp/Hsp_align-len}'`
         FRAME=`viewblast.py info $INDEX INITIAL_BLAST.fasta -f '{Hit_hsps/Hsp/Hsp_hit-frame}'`
         NOHEADER=`fetchaccession.py $ACC | fastafromtraces.sh | tail -n -1`
-        echo ">$HEADER\n$NOHEADER" | translate.py -r $FRAME > $FASTA_PATH
+        echo -e ">$HEADER\n$NOHEADER" | translate.py -r $FRAME > $FASTA_PATH
 
-        MAFFTFASTA=`cat $INPUT $FASTA_PATH`
+        MAFFTFASTA=`cat $INPUT_FASTA $FASTA_PATH`
         echo "$MAFFTFASTA" > TMP_MAFFT_INPUT.fasta
         mafft TMP_MAFFT_INPUT.fasta > $MAFFT_FASTA_PATH 2> /dev/null
         ANALYSIS=`alignmentanalysis.py $MAFFT_FASTA_PATH`
         cat $MAFFT_FASTA_PATH | formatmafft.py --header "$ANALYSIS" -o $MAFFT_RTF_PATH
-        rm TMP_MAFFT_INPUT.fasta
 
         echo "$ACC" >> $PREVIOUS
     fi
