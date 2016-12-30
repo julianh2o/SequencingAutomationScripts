@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 #seq 10 prints every number between 1 and 10
 #extractfastaseq.py mafftout.txt -c counts the entries in your file
