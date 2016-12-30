@@ -6,6 +6,11 @@ else
     A=`cat`
 fi
 
+if [[ $A == '>'* ]]; then
+    echo "$A"
+    exit
+fi
+
 ACCESSION=`echo -n $A | perl -0777 -ne 'if(m/ACCESSION\s+(\S+)/g){print "$1\n";}'`
 BODY=`echo -n $A | perl -0777 -ne 'if(m/ORIGIN([\w\W]+)\/\//g){print "$1\n";}' | perl -pe 's/[\s0-9]//g'`
 
