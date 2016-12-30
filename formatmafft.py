@@ -407,6 +407,8 @@ def main():
     args = parser.parse_args()
 
     sequences = parseFasta(args.fasta)
+    if (len(sequences) == 0):
+        raise Exception("Input file is empty!");
 
     rtfOutput = args.output and args.output.name.endswith(".rtf")
     ss = generateStyle(rtfOutput,args)

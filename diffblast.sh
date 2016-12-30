@@ -19,14 +19,14 @@ comm -13 PREVIOUS_SORTED.txt CURRENT_ACCESSIONS.txt | tr -d '\t' > NEW_ACCESSION
 NEW_COUNT=`wc -l NEW_ACCESSIONS.txt | awk '{print $1}'`
 echo "Found $NEW_COUNT new accessions"
 
-rm -rf $OUTPUT_FOLDER
+#rm -rf $OUTPUT_FOLDER
+#rm -rf $MAFFT_OUTPUT_FOLDER
+#rm -rf $MAFFT_RTF_OUTPUT_FOLDER
+
 mkdir -p $OUTPUT_FOLDER
-
-rm -rf $MAFFT_OUTPUT_FOLDER
 mkdir -p $MAFFT_OUTPUT_FOLDER
-
-rm -rf $MAFFT_RTF_OUTPUT_FOLDER
 mkdir -p $MAFFT_RTF_OUTPUT_FOLDER
+
 cat NEW_ACCESSIONS.txt | while read ACC; do
     [ -z "$ACC" ] && continue #skip blank lines
 

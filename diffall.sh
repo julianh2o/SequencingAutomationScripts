@@ -1,8 +1,6 @@
 #!/bin/bash
 
 DB=tsa_nt
-ENTREZ='(txid6657 [ORGN]) NOT (txid6830 [ORGN])'
-INPUT=input.fasta
 PREVIOUS=previous.txt
 RESULTS_FOLDER=results
 OUTPUT_FOLDER=./fastaupdates
