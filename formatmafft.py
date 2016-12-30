@@ -57,6 +57,7 @@ parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFor
 parser.add_argument('fasta', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the MAFFT aligned FASTA sequence(s)')
 parser.add_argument('-o', "--output", type=argparse.FileType('w'), nargs="?", default=sys.stdout, help='Output file')
 parser.add_argument('-f', "--fastaout", action="store_const", const=True, default=False, help="Output in a fasta format")
+parser.add_argument("--header", default="", help="Append this to the beginning of the output")
 
 parser.add_argument("--wrap",dest="wrap", type=int, default="60",help='Wrap the fasta to this width')
 parser.add_argument('-C', "--colors", default=None, help='Provide custom colors in the format "255,0,255 0,255,255"')
@@ -437,6 +438,8 @@ def main():
         out += r"\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural"
         out += r"\f0\fs20"
 
+        out += rtfStyle(args.header,Style());
+
         if (args.fastaout):
             doFastaOutput(sequences,regions,ss,write,args)
         else:
@@ -448,9 +451,30 @@ def main():
 
     else:
         import colorama
+        coloramaFgColorMapping = {
+            "black":colorama.Fore.BLACK,
+            "red":colorama.Fore.RED,
+            "green":colorama.Fore.GREEN,
+            "yellow":colorama.Fore.YELLOW,
+            "blue":colorama.Fore.BLUE,
+            "magenta":colorama.Fore.MAGENTA,
+            "cyan":colorama.Fore.CYAN,
+            "white":colorama.Fore.WHITE
+        }
 
-        coloramaBgColors = [colorama.Back.YELLOW, colorama.Back.CYAN, colorama.Back.GREEN, colorama.Back.MAGENTA,colorama.back.RED,colorama.Back.BLUE]
-        coloramaFgColors = [colorama.Fore.YELLOW, colorama.Fore.CYAN, colorama.Fore.GREEN, colorama.Fore.MAGENTA,colorama.back.RED,colorama.Fore.BLUE]
+        coloramaBgColorMapping = {
+            "black":colorama.Back.BLACK,
+            "red":colorama.Back.RED,
+            "green":colorama.Back.GREEN,
+            "yellow":colorama.Back.YELLOW,
+            "blue":colorama.Back.BLUE,
+            "magenta":colorama.Back.MAGENTA,
+            "cyan":colorama.Back.CYAN,
+            "white":colorama.Back.WHITE
+        }
+
+        coloramaBgColors = [colorama.Back.YELLOW, colorama.Back.CYAN, colorama.Back.GREEN, colorama.Back.MAGENTA,colorama.Back.RED,colorama.Back.BLUE]
+        coloramaFgColors = [colorama.Fore.YELLOW, colorama.Fore.CYAN, colorama.Fore.GREEN, colorama.Fore.MAGENTA,colorama.Back.RED,colorama.Fore.BLUE]
         def write(a,fg="black",bg="white"):
             print(coloramaFgColorMapping[fg]+coloramaBgColorMapping[bg]+a+colorama.Fore.RESET+colorama.Back.RESET)
 
