@@ -1,18 +1,19 @@
-
 #!/bin/bash
 
-DB=tsa_nt
-ENTREZ='(txid6657 [ORGN]) NOT (txid6830 [ORGN])'
-INPUT=input.fasta
-PREVIOUS=previous.txt
-OUTPUT_FOLDER=./fastaupdates
-MAFFT_OUTPUT_FOLDER=./mafftoutput
-MAFFT_RTF_OUTPUT_FOLDER=./mafftoutput_rtf
+DB=$1
+ENTREZ=$2
+INPUT_FASTA=$3
+PREVIOUS=$3
+OUTPUT_FOLDER=$5
+MAFFT_OUTPUT_FOLDER=$6
+MAFFT_RTF_OUTPUT_FOLDER=$7
 
-#tblastn -remote -db $DB -entrez_query "$ENTREZ" -query $INPUT -outfmt 5 > INITIAL_BLAST.fasta
+if [ ! -f INITIAL_BLAST.fasta ]; then
+    tblastn -remote -db $DB -entrez_query "$ENTREZ" -query $INPUT_FASTA -outfmt 5 > INITIAL_BLAST.fasta
+fi
 
 viewblast.py list INITIAL_BLAST.fasta -f '{Hit_accession}' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > CURRENT_ACCESSIONS.txt
-cat $PREVIOUS | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > PREVIOUS_SORTED.txt
+cat $PREVIOUS | sed 's/\/\/.*//g' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > PREVIOUS_SORTED.txt
 comm -13 PREVIOUS_SORTED.txt CURRENT_ACCESSIONS.txt | tr -d '\t' > NEW_ACCESSIONS.txt
 
 NEW_COUNT=`wc -l NEW_ACCESSIONS.txt | awk '{print $1}'`
@@ -27,6 +28,8 @@ mkdir -p $MAFFT_OUTPUT_FOLDER
 rm -rf $MAFFT_RTF_OUTPUT_FOLDER
 mkdir -p $MAFFT_RTF_OUTPUT_FOLDER
 cat NEW_ACCESSIONS.txt | while read ACC; do
+    [ -z "$ACC" ] && continue #skip blank lines
+
     FASTA_NAME=$ACC
     FASTA_PATH=$OUTPUT_FOLDER/$FASTA_NAME.txt
     MAFFT_FASTA_PATH=$MAFFT_OUTPUT_FOLDER/$FASTA_NAME.fasta
