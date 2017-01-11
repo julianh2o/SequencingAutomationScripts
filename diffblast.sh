@@ -7,6 +7,7 @@ PREVIOUS=$4
 OUTPUT_FOLDER=$5
 MAFFT_OUTPUT_FOLDER=$6
 MAFFT_RTF_OUTPUT_FOLDER=$7
+ECUTOFF="1e-100"
 
 if [ ! -f INITIAL_BLAST.fasta ]; then
     tblastn -remote -db $DB -entrez_query "$ENTREZ" -query $INPUT_FASTA -outfmt 5 > INITIAL_BLAST.fasta
@@ -34,9 +35,18 @@ cat NEW_ACCESSIONS.txt | while read ACC; do
     FASTA_PATH=$OUTPUT_FOLDER/$FASTA_NAME.txt
     MAFFT_FASTA_PATH=$MAFFT_OUTPUT_FOLDER/$FASTA_NAME.fasta
     MAFFT_RTF_PATH=$MAFFT_RTF_OUTPUT_FOLDER/$FASTA_NAME.rtf
+
+    INDEX=`viewblast.py list INITIAL_BLAST.fasta -f '{Hit_accession} {Hit_num}' | grep $ACC | awk '{print $2}'`
+    E=`viewblast.py info $INDEX INITIAL_BLAST.fasta -f '{e}'`
+    TOOWEAK=`awk 'BEGIN { print ('$E'>'$ECUTOFF')? "1" : "0" }'`
+
+    if [[ "$TOOWEAK" = "1" ]]; then
+        echo "Skipping $ACC E=$E"
+        continue #skip weak results
+    fi
+
     if [ ! -f $FASTA_PATH ]; then
-        echo "Downloading into $FASTA_NAME";
-        INDEX=`viewblast.py list INITIAL_BLAST.fasta -f '{Hit_accession} {Hit_num}' | grep $ACC | awk '{print $2}'`
+        echo "Downloading into $FASTA_NAME (e: $E)";
         HEADER=`viewblast.py info $INDEX INITIAL_BLAST.fasta -f '{Hit_accession} {Hit_def} {Hit_hsps/Hsp/Hsp_bit-score} {e} {Hit_hsps/Hsp/Hsp_identity} {Hit_hsps/Hsp/Hsp_align-len}'`
         FRAME=`viewblast.py info $INDEX INITIAL_BLAST.fasta -f '{Hit_hsps/Hsp/Hsp_hit-frame}'`
         NOHEADER=`fetchaccession.py $ACC | fastafromtraces.sh | tail -n -1`
