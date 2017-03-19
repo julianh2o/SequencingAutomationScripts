@@ -14,7 +14,7 @@ echo "$TAXA_QUERIES" | while read taxa
 do
     TAXA_IDENT=`echo -n $taxa | awk -F'###' '{print $1}'`
     QUERY=`echo -n $taxa | awk -F'###' '{print $2}'`
-    E=`echo -n $taxa | awk -F'###' '{print $3}'`
+    E_CUTOFF=`echo -n $taxa | awk -F'###' '{print $3}'`
 
     extractfastaseq.py $QUERY_LIST -l | while read fasta
     do
@@ -30,7 +30,8 @@ do
 
         echo -e "$HEAD\n$SEQ" > QUERY.fasta
         touch $PREVIOUS
-        diffblast.sh $DB "$QUERY" QUERY.fasta $PREVIOUS $OUTPUT_FOLDER $MAFFT_OUTPUT_FOLDER $MAFFT_RTF_OUTPUT_FOLDER
+        echo "Executing: " diffblast.sh $DB "$QUERY" QUERY.fasta $PREVIOUS $OUTPUT_FOLDER $MAFFT_OUTPUT_FOLDER $MAFFT_RTF_OUTPUT_FOLDER $E_CUTOFF
+        diffblast.sh $DB "$QUERY" QUERY.fasta $PREVIOUS $OUTPUT_FOLDER $MAFFT_OUTPUT_FOLDER $MAFFT_RTF_OUTPUT_FOLDER $E_CUTOFF
 
         cd ../..
 

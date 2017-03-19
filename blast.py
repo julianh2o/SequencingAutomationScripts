@@ -42,14 +42,14 @@ def startBlast(program,database,entrez,query):
     if (entrez):
         params["ENTREZ_QUERY"] = entrez;
 
-    r = requests.post("http://www.ncbi.nlm.nih.gov/blast/Blast.cgi",params=params);
+    r = requests.post("https://blast.ncbi.nlm.nih.gov/Blast.cgi",params=params);
     info = extractBlastInfo(r.text);
     return info['RID'], int(info['RTOE']);
 
 def waitForCompletion(rid):
     i = 0;
     while(True):
-        r = requests.get("http://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&FORMAT_OBJECT=SearchInfo&RID=%s" % rid);
+        r = requests.get("https://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&FORMAT_OBJECT=SearchInfo&RID=%s" % rid);
         info = extractBlastInfo(r.text);
         status = info["Status"]
         if (status == "READY"): return True;
@@ -62,7 +62,7 @@ def waitForCompletion(rid):
         time.sleep(sleeptime);
 
 def getResults(rid):
-    r = requests.get("http://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&FORMAT_TYPE=XML&RID=%s" % rid);
+    r = requests.get("https://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&FORMAT_TYPE=XML&RID=%s" % rid);
     return r.text;
 
 def main():
@@ -83,6 +83,6 @@ def main():
     with open("_latest.blast","w") as f:
         f.write(results);
     print(results.strip());
-    sys.stderr.write("View in browser: http://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&FORMAT_TYPE=HTML&RID=%s\n" % rid);
+    sys.stderr.write("View in browser: https://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&FORMAT_TYPE=HTML&RID=%s\n" % rid);
 
 main();

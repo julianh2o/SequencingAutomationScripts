@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#Look at rundiffsample.config for an example of how to configure this
+#Run with rundiffconfig.sh myconfig.config
+
+CONFIG_FILE=$1
+source $1
+
+echo "DATABASE:      $DATABASE"
+echo "PREVIOUS_FILE: $PREVIOUS_FILE"
+echo "QUERY:         $QUERY"
+echo "ECUTOFF:       $ECUTOFF"
+echo "RESULT_FOLDER: $RESULT_FOLDER"
+echo "RESULT_SEQ:    $RESULT_SEQ"
+echo "RESULT_MAFFT:  $RESULT_MAFFT"
+echo "RESULT_RTF:    $RESULT_RTF"
+echo "INCLUDE:       $INCLUDE"
+echo "EXCLUDE:       $EXCLUDE"
+
+SEQUENCE_OUTPUT=$RESULT_FOLDER/$RESULT_SEQ
+MAFFT_OUTPUT=$RESULT_FOLDER/$RESULT_MAFFT
+RTF_OUTPUT=$RESULT_FOLDER/$RESULT_RTF
+
+echo "Executing: " diffblast.sh $DB "TODO" $QUERY $PREVIOUS_FILE $SEQUENCE_OUTPUT $MAFFT_OUTPUT $RTF_OUTPUT $E_CUTOFF
+#diffblast.sh $DB "TODO" $QUERY $PREVIOUS_FILE $SEQUENCE_OUTPUT $MAFFT_OUTPUT $RTF_OUTPUT $E_CUTOFF
