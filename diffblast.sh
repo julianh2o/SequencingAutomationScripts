@@ -50,7 +50,7 @@ cat NEW_ACCESSIONS.txt | while read ACC; do
         echo "Downloading into $FASTA_NAME (e: $E)";
         HEADER=`viewblast.py info $INDEX INITIAL_BLAST.blast -f '{Hit_accession} {Hit_def} {Hit_hsps/Hsp/Hsp_bit-score} {e} {Hit_hsps/Hsp/Hsp_identity} {Hit_hsps/Hsp/Hsp_align-len}'`
         FRAME=`viewblast.py info $INDEX INITIAL_BLAST.blast -f '{Hit_hsps/Hsp/Hsp_hit-frame}'`
-        COMMENT=`viewblast.py info $INDEX INITIAL_BLAST.blast -f '{Hit_def} bit_s:{Hit_hsps/Hsp/Hsp_bit-score} s:{Hit_hsps/Hsp/Hsp_score} e:{Hit_hsps/Hsp/Hsp_evalue} ident:{Hit_hsps/Hsp/Hsp_identity}'`
+        COMMENT=`viewblast.py info $INDEX INITIAL_BLAST.blast -f '{Hit_def} e:{e} cover:{cover}'`
         NOHEADER=`fetchaccession.py $ACC | fastafromtraces.sh | tail -n -1`
         echo -e ">$HEADER\n$NOHEADER" | translate.py -r $FRAME > $FASTA_PATH
 
@@ -60,6 +60,9 @@ cat NEW_ACCESSIONS.txt | while read ACC; do
         ANALYSIS=`alignmentanalysis.py $MAFFT_FASTA_PATH`
         cat $MAFFT_FASTA_PATH | formatmafft.py --header "$ANALYSIS" -o $MAFFT_RTF_PATH
 
-        echo "$ACC //$COMMENT" >> $PREVIOUS
+        IDENT=`echo -n "$ANALYSIS" | tail -n -1 | awk -F'\t' '{printf("%d%%",100*($4/$3))}'`
+
+        DATE=`date +%Y-%m-%d`
+        echo "$ACC //$DATE $COMMENT ident=$IDENT" >> $PREVIOUS
     fi
 done

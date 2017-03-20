@@ -25,6 +25,7 @@ of particular use are
     {Hit_def} - replaecd with most of the remaining fasta header, again, this seems to be dependent on the database
     {Hit_accession} - replaced with the accession number as known by the database, if blasting against NCBI this is a GB accession
     {e} - replaced with the evalue of the first "sub hit"
+    {cover} - replaced with the query coverage of all "sub hits"
 
 Show the accession number and the evalue of the top 5 results separated by commas
     viewblast.py list out.blast -n 5 -f '{Hit_accession},{e}'
@@ -90,30 +91,75 @@ def formatTable(output):
             i += 1;
         print();
 
-def doFormat(formatString,alignment):
+def doFormat(formatString,alignment,othermapping):
     formatString = formatString.replace("{e}","{Hit_hsps/Hsp/Hsp_evalue}");
+    for k,v in othermapping.items():
+        formatString = formatString.replace("{"+k+"}",v);
     def replacementFunction(match):
         return alignment.find(match.group(1)).text;
     formatString = re.sub("{(.*?)}",replacementFunction,formatString);
     return formatString;
 
+def addCoverage(coverage,seq):
+    inserted = False;
+    for i,cov in enumerate(coverage):
+        startsBefore = seq[0] < cov[0];
+
+        if (startsBefore):
+            inserted = True;
+            coverage.insert(i,seq);
+            break;
+    if (not inserted): coverage.append(seq);
+
+    i = -1;
+    while(i < len(coverage) - 2):
+        i += 1;
+
+        a = coverage[i];
+        b = coverage[i+1];
+
+        if (a[1] < b[0]): continue #no coalescing required, disparate
+        if (a[1] > b[1]):
+            coverage.pop(i+1);
+            i -= 1;
+            continue;
+
+        coverage[i] = (a[0],b[1]);
+        coverage.pop(i+1);
+        i -= 1;
+
+def calculateCoverage(hsps):
+    coverage = [];
+    for hsp in hsps:
+        seq = (int(hsp.find("Hsp_query-from").text),int(hsp.find("Hsp_query-to").text))
+        addCoverage(coverage,seq);
+    
+    coverageCount = 0;
+    for seq in coverage:
+        diff = seq[1] - seq[0] + 1;
+        coverageCount += diff;
+    
+    return coverageCount;
             
 def info(args):
     results = args.blast.read();
 
     rootNode = ET.fromstring(results);
+    queryLength = int(rootNode.find("BlastOutput_iterations/Iteration/Iteration_query-len").text);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
     if (len(alignments) == 0):
         sys.exit(0)
     i = 1;
     for alignment in alignments:
+        coverCount = calculateCoverage(alignment.findall("Hit_hsps/Hsp"));
+        coverage = "{:.0f}".format(100*float(coverCount) / float(queryLength)) + "%";
         hitid = alignment.find("Hit_id").text;
         hitdef = alignment.find("Hit_def").text;
         accession = alignment.find("Hit_accession").text;
         evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
         if (i == args.index):
             fstring = args.format.replace("\\t","\t");
-            fstring = doFormat(fstring,alignment);
+            fstring = doFormat(fstring,alignment,{"cover":coverage});
             print(fstring);
             exit(0);
         i += 1
@@ -142,6 +188,7 @@ contig_parser.set_defaults(func=contig);
 def list(args):
     results = args.blast.read();
     rootNode = ET.fromstring(results);
+    queryLength = int(rootNode.find("BlastOutput_iterations/Iteration/Iteration_query-len").text);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
     if (len(alignments) == 0):
         sys.exit(0)
@@ -149,12 +196,14 @@ def list(args):
     output = [];
     i = 0;
     for alignment in alignments:
+        coverCount = calculateCoverage(alignment.findall("Hit_hsps/Hsp"));
+        coverage = "{:.0f}".format(100*float(coverCount) / float(queryLength)) + "%";
         hitid = alignment.find("Hit_id").text;
         hitdef = alignment.find("Hit_def").text;
         accession = alignment.find("Hit_accession").text;
         evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
         fstring = args.format.replace("\\t","\t");
-        fstring = doFormat(fstring,alignment);
+        fstring = doFormat(fstring,alignment,{"cover":coverage});
         output.append(fstring.split("\t"));
         if (i == args.max): break;
         i+=1;
