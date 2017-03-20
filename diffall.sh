@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "THIS IS BROKEN, DO NOT USE!"
+exit
+
 DB=tsa_nt
 PREVIOUS=previous.txt
 RESULTS_FOLDER=results
@@ -34,7 +37,5 @@ do
         diffblast.sh $DB "$QUERY" QUERY.fasta $PREVIOUS $OUTPUT_FOLDER $MAFFT_OUTPUT_FOLDER $MAFFT_RTF_OUTPUT_FOLDER $E_CUTOFF
 
         cd ../..
-
     done
-
 done

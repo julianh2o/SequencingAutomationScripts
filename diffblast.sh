@@ -1,11 +1,12 @@
 #!/bin/bash
 
-BLAST_FILE=$1
-PREVIOUS=$2
-OUTPUT_FOLDER=$3
-MAFFT_OUTPUT_FOLDER=$4
-MAFFT_RTF_OUTPUT_FOLDER=$5
-ECUTOFF=$6 #1e-100
+QUERY_FASTA=$1
+BLAST_FILE=$2
+PREVIOUS=$3
+OUTPUT_FOLDER=$4
+MAFFT_OUTPUT_FOLDER=$5
+MAFFT_RTF_OUTPUT_FOLDER=$6
+ECUTOFF=$7 #1e-100
 
 viewblast.py list $BLAST_FILE -f '{Hit_accession}' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > CURRENT_ACCESSIONS.txt
 cat $PREVIOUS | sed 's/\/\/.*//g' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > PREVIOUS_SORTED.txt
@@ -25,7 +26,7 @@ mkdir -p $MAFFT_RTF_OUTPUT_FOLDER
 
 DATE=`date +%Y-%m-%d`
 
-echo "//[$DATE] Running diffblast: db:$DB entrez:$ENTREZ fasta:$INPUT_FASTA previous:$PREVIOUS ecut:$ECUTOFF output:$OUTPUT_FOLDER,$MAFFT_OUTPUT_FOLDER,$MAFFT_RTF_OUTPUT_FOLDER" >> $PREVIOUS
+echo "//[$DATE] Running diffblast: fasta:$QUERY_FASTA previous:$PREVIOUS ecut:$ECUTOFF output:$OUTPUT_FOLDER,$MAFFT_OUTPUT_FOLDER,$MAFFT_RTF_OUTPUT_FOLDER" >> $PREVIOUS
 
 viewblast.py list $BLAST_FILE -f '{Hit_accession}|{Hit_num}|{e}|{Hit_def}|{Hit_hsps/Hsp/Hsp_bit-score}|{Hit_hsps/Hsp/Hsp_identity}|{Hit_hsps/Hsp/Hsp_align-len}|{Hit_hsps/Hsp/Hsp_hit-frame}|{cover}' | while read LINE; do
     ACC=`echo $LINE | awk -F'|' '{print $1}'`
@@ -52,7 +53,7 @@ viewblast.py list $BLAST_FILE -f '{Hit_accession}|{Hit_num}|{e}|{Hit_def}|{Hit_h
     [ -z $ISNEW ] && continue
 
     FASTA_NAME=$ACC
-    FASTA_PATH=$OUTPUT_FOLDER/$FASTA_NAME.txt
+    FASTA_PATH=$OUTPUT_FOLDER/$FASTA_NAME.fasta
     MAFFT_FASTA_PATH=$MAFFT_OUTPUT_FOLDER/$FASTA_NAME.fasta
     MAFFT_RTF_PATH=$MAFFT_RTF_OUTPUT_FOLDER/$FASTA_NAME.rtf
 
@@ -64,13 +65,17 @@ viewblast.py list $BLAST_FILE -f '{Hit_accession}|{Hit_num}|{e}|{Hit_def}|{Hit_h
     fi
 
     if [ ! -f $FASTA_PATH ]; then
-        echo "Downloading into $FASTA_NAME (e: $E)";
+        echo "Downloading $FASTA_NAME (e: $E)";
         HEADER="$ACC $DESCRIPTION $HSP_HIT_SCORE $E $HSP_IDENTITY $HSP_ALIGN_LEN"
         NOHEADER=`fetchaccession.py $ACC | fastafromtraces.sh | tail -n -1`
 
         echo -e ">$HEADER\n$NOHEADER" | translate.py -r $HSP_HIT_FRAME > $FASTA_PATH
+        if [ $? -ne 0 ]; then
+            echo "Translation failed for $ACC, skipping result!"
+            continue;
+        fi
 
-        MAFFTFASTA=`cat $INPUT_FASTA $FASTA_PATH`
+        MAFFTFASTA=`cat $QUERY_FASTA $FASTA_PATH`
         echo "$MAFFTFASTA" > TMP_MAFFT_INPUT.fasta
         mafft TMP_MAFFT_INPUT.fasta > $MAFFT_FASTA_PATH 2> /dev/null
 
@@ -84,4 +89,4 @@ viewblast.py list $BLAST_FILE -f '{Hit_accession}|{Hit_num}|{e}|{Hit_def}|{Hit_h
 done
 
 #clean up
-rm CURRENT_ACCESSIONS.txt NEW_ACCESSIONS.txt PREVIOUS_SORTED.txt TMP_MAFFT_INPUT.fasta
+rm -f CURRENT_ACCESSIONS.txt NEW_ACCESSIONS.txt PREVIOUS_SORTED.txt TMP_MAFFT_INPUT.fasta

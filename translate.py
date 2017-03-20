@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import re
 import sys
 import fileinput
 import argparse
 import util
 from argparse import RawTextHelpFormatter
+import sys
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 help="""
 Translate DNA/RNA sequence into a protein sequence
@@ -187,7 +192,8 @@ def main():
     sequence = sequence.replace("\n","").upper();
     isDna = detectDNA(sequence);
     if (isDna is None):
-        print("ERROR: Could not detect DNA/RNA");
+        eprint("ERROR: Could not detect DNA/RNA");
+        sys.exit(1);
 
     if (isDna):
         sequence = dnaToRna(sequence);
