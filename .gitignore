@@ -5,3 +5,4 @@ testing
 outputs/
 __pycache__
 *.pyc
+*.swo

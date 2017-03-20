@@ -1,19 +1,13 @@
 #!/bin/bash
 
-DB=$1
-ENTREZ=$2
-INPUT_FASTA=$3
-PREVIOUS=$4
-OUTPUT_FOLDER=$5
-MAFFT_OUTPUT_FOLDER=$6
-MAFFT_RTF_OUTPUT_FOLDER=$7
-ECUTOFF=$8 #1e-100
+BLAST_FILE=$1
+PREVIOUS=$2
+OUTPUT_FOLDER=$3
+MAFFT_OUTPUT_FOLDER=$4
+MAFFT_RTF_OUTPUT_FOLDER=$5
+ECUTOFF=$6 #1e-100
 
-if [ ! -f INITIAL_BLAST.blast ]; then
-    tblastn -remote -db $DB -entrez_query "$ENTREZ" -query $INPUT_FASTA -outfmt 5 > INITIAL_BLAST.blast
-fi
-
-viewblast.py list INITIAL_BLAST.blast -f '{Hit_accession}' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > CURRENT_ACCESSIONS.txt
+viewblast.py list $BLAST_FILE -f '{Hit_accession}' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > CURRENT_ACCESSIONS.txt
 cat $PREVIOUS | sed 's/\/\/.*//g' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > PREVIOUS_SORTED.txt
 comm -13 PREVIOUS_SORTED.txt CURRENT_ACCESSIONS.txt | tr -d '\t' > NEW_ACCESSIONS.txt
 
@@ -33,7 +27,7 @@ DATE=`date +%Y-%m-%d`
 
 echo "//[$DATE] Running diffblast: db:$DB entrez:$ENTREZ fasta:$INPUT_FASTA previous:$PREVIOUS ecut:$ECUTOFF output:$OUTPUT_FOLDER,$MAFFT_OUTPUT_FOLDER,$MAFFT_RTF_OUTPUT_FOLDER" >> $PREVIOUS
 
-viewblast.py list INITIAL_BLAST.blast -f '{Hit_accession}|{Hit_num}|{e}|{Hit_def}|{Hit_hsps/Hsp/Hsp_bit-score}|{Hit_hsps/Hsp/Hsp_identity}|{Hit_hsps/Hsp/Hsp_align-len}|{Hit_hsps/Hsp/Hsp_hit-frame}|{cover}' | while read LINE; do
+viewblast.py list $BLAST_FILE -f '{Hit_accession}|{Hit_num}|{e}|{Hit_def}|{Hit_hsps/Hsp/Hsp_bit-score}|{Hit_hsps/Hsp/Hsp_identity}|{Hit_hsps/Hsp/Hsp_align-len}|{Hit_hsps/Hsp/Hsp_hit-frame}|{cover}' | while read LINE; do
     ACC=`echo $LINE | awk -F'|' '{print $1}'`
     INDEX=`echo $LINE | awk -F'|' '{print $2}'`
     E=`echo $LINE | awk -F'|' '{print $3}'`
@@ -88,3 +82,6 @@ viewblast.py list INITIAL_BLAST.blast -f '{Hit_accession}|{Hit_num}|{e}|{Hit_def
         echo "$ACC //$COMMENT" >> $PREVIOUS
     fi
 done
+
+#clean up
+rm CURRENT_ACCESSIONS.txt NEW_ACCESSIONS.txt PREVIOUS_SORTED.txt TMP_MAFFT_INPUT.fasta
