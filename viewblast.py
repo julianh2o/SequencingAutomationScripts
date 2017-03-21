@@ -148,6 +148,7 @@ def calculateCoverage(hsps):
 def info(args):
     results = args.blast.read();
 
+    if (len(results.strip()) == 0) exit(1);
     rootNode = ET.fromstring(results);
     queryLength = int(rootNode.find("BlastOutput_iterations/Iteration/Iteration_query-len").text);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
@@ -172,6 +173,7 @@ info_parser.set_defaults(func=info);
 def contig(args):
     results = args.blast.read();
 
+    if (len(results.strip()) == 0) exit(1);
     rootNode = ET.fromstring(results);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
     if (len(alignments) == 0):
@@ -191,6 +193,8 @@ contig_parser.set_defaults(func=contig);
 
 def list(args):
     results = args.blast.read();
+
+    if (len(results.strip()) == 0) exit(1);
     rootNode = ET.fromstring(results);
     queryLength = int(rootNode.find("BlastOutput_iterations/Iteration/Iteration_query-len").text);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
