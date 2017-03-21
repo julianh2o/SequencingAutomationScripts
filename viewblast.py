@@ -51,6 +51,18 @@ This only works with an NCBI blast, it uses the result Hit_accession number to t
 Only show results who's E-value is less than or equal to the provided evalue
     viewblast.py list out.blast -e '1e-50'
 
+Output the list of HSPs from the 2nd hit
+    viewblast.py hsp 2 result.blast
+
+Format the list of HSPs from the 2nd hit
+    viewblast.py hsp 2 result.blast -f '{Hsp_num} {Hsp_score} {Hsp_evalue} {Hsp_hit-frame}'
+
+Get help on the various options
+    viewblast.py info -h
+    viewblast.py contig -h
+    viewblast.py hsp -h
+    viewblast.py list -h
+
 You can of course, pipe in a blast result directly. This command gets the first 5 results of the blast
 tblastn -db tsa_nt -query query.txt -remote | viewblast.py list -n 5
 """
@@ -62,6 +74,11 @@ info_parser = command_subparser.add_parser("info",help="View a single result");
 info_parser.add_argument("index", type=int);
 info_parser.add_argument("-f","--format", help="Format of the response", default="{Hit_accession}");
 info_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
+
+hsp_parser = command_subparser.add_parser("hsp",help="List Hsp information from hit");
+hsp_parser.add_argument("index", type=int);
+hsp_parser.add_argument("-f","--format", help="Format of the response", default="[{Hsp_num}] score:{Hsp_score} e:{Hsp_evalue} frame:{Hsp_hit-frame}");
+hsp_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
 
 contig_parser = command_subparser.add_parser("contig",help="View a result's contig");
 contig_parser.add_argument("index", type=int);
@@ -95,12 +112,11 @@ def formatTable(output):
             i += 1;
         print();
 
-def doFormat(formatString,alignment,othermapping):
-    formatString = formatString.replace("{e}","{Hit_hsps/Hsp/Hsp_evalue}");
+def doFormat(formatString,root,othermapping):
     for k,v in othermapping.items():
         formatString = formatString.replace("{"+k+"}",v);
     def replacementFunction(match):
-        return alignment.find(match.group(1)).text;
+        return root.find(match.group(1)).text;
     formatString = re.sub("{(.*?)}",replacementFunction,formatString);
     return formatString;
 
@@ -144,28 +160,71 @@ def calculateCoverage(hsps):
         coverageCount += diff;
     
     return coverageCount;
+
+def calculateMultiframe(ecutoff,hsps):
+    frameOfHit = None;
+    for hsp in hsps:
+        e = float(hsp.find("Hsp_evalue").text);
+        hitFrame = hsp.find("Hsp_hit-frame").text;
+        if (e <= float(ecutoff)):
+            if (frameOfHit is not None):
+                if (frameOfHit != hitFrame):
+                    return True;
+            frameOfHit = hitFrame;
+    return False;
+
+def formatAlignment(args,root,alignment):
+    queryLength = int(root.find("BlastOutput_iterations/Iteration/Iteration_query-len").text);
+    isMultiframe = calculateMultiframe(args.ecutoff,alignment.findall("Hit_hsps/Hsp"));
+    multiframe = "MULTIFRAME" if isMultiframe else "";
+    hspCount = len(alignment.find("Hit_hsps").getchildren());
+    coverCount = calculateCoverage(alignment.findall("Hit_hsps/Hsp"));
+    coverage = "{:.0f}".format(100*float(coverCount) / float(queryLength)) + "%";
+    hitid = alignment.find("Hit_id").text;
+    hitdef = alignment.find("Hit_def").text;
+    accession = alignment.find("Hit_accession").text;
+    evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
+    fstring = args.format.replace("\\t","\t");
+    otherParams = {
+        "e":evalue,
+        "cover":coverage,
+        "hspCount":str(hspCount),
+        "multiframe":multiframe
+    }
+    fstring = doFormat(fstring,alignment,otherParams);
+    return fstring
+
+def hsp(args):
+    results = args.blast.read();
+
+    if (len(results.strip()) == 0): exit(1);
+    rootNode = ET.fromstring(results);
+    alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
+    if (len(alignments) == 0):
+        sys.exit(0)
+    i = 1;
+    for alignment in alignments:
+        if (i == args.index):
+            hsps = alignment.findall("Hit_hsps/Hsp");
+            for hsp in hsps:
+                print(doFormat(args.format.replace("\\t","\t"),hsp,{}));
+            exit(0);
+        i += 1
+hsp_parser.set_defaults(func=hsp);
+
             
 def info(args):
     results = args.blast.read();
 
     if (len(results.strip()) == 0): exit(1);
     rootNode = ET.fromstring(results);
-    queryLength = int(rootNode.find("BlastOutput_iterations/Iteration/Iteration_query-len").text);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
     if (len(alignments) == 0):
         sys.exit(0)
     i = 1;
     for alignment in alignments:
-        coverCount = calculateCoverage(alignment.findall("Hit_hsps/Hsp"));
-        coverage = "{:.0f}".format(100*float(coverCount) / float(queryLength)) + "%";
-        hitid = alignment.find("Hit_id").text;
-        hitdef = alignment.find("Hit_def").text;
-        accession = alignment.find("Hit_accession").text;
-        evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
         if (i == args.index):
-            fstring = args.format.replace("\\t","\t");
-            fstring = doFormat(fstring,alignment,{"cover":coverage});
-            print(fstring);
+            print(formatAlignment(args,rootNode,alignment));
             exit(0);
         i += 1
 info_parser.set_defaults(func=info);
@@ -180,11 +239,8 @@ def contig(args):
         sys.exit(0)
     i = 1;
     for alignment in alignments:
-        hitid = alignment.find("Hit_id").text;
-        hitdef = alignment.find("Hit_def").text;
-        accession = alignment.find("Hit_accession").text;
-        evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
         if (i == args.index):
+            accession = alignment.find("Hit_accession").text;
             contig = fetchContig(accession);
             print(contig);
             exit(0);
@@ -196,7 +252,6 @@ def list(args):
 
     if (len(results.strip()) == 0): exit(1);
     rootNode = ET.fromstring(results);
-    queryLength = int(rootNode.find("BlastOutput_iterations/Iteration/Iteration_query-len").text);
     alignments = rootNode.findall("BlastOutput_iterations/Iteration/Iteration_hits/Hit")
     if (len(alignments) == 0):
         sys.exit(0)
@@ -204,17 +259,14 @@ def list(args):
     output = [];
     i = 0;
     for alignment in alignments:
-        coverCount = calculateCoverage(alignment.findall("Hit_hsps/Hsp"));
-        coverage = "{:.0f}".format(100*float(coverCount) / float(queryLength)) + "%";
-        hitid = alignment.find("Hit_id").text;
-        hitdef = alignment.find("Hit_def").text;
-        accession = alignment.find("Hit_accession").text;
         evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
+
         if (args.ecutoff):
             if (not float(evalue) <= float(args.ecutoff)): continue;
-        fstring = args.format.replace("\\t","\t");
-        fstring = doFormat(fstring,alignment,{"cover":coverage});
+
+        fstring = formatAlignment(args,rootNode,alignment);
         output.append(fstring.split("\t"));
+
         if (i == args.max): break;
         i+=1;
     if (len(output)): formatTable(output);
