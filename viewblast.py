@@ -48,6 +48,9 @@ Returns a list of all result accession numbers from the blast
 This only works with an NCBI blast, it uses the result Hit_accession number to then look up the contig on GenBank
     viewblast.py contig 1 out.blast
 
+Only show results who's E-value is less than or equal to the provided evalue
+    viewblast.py list out.blast -e '1e-50'
+
 You can of course, pipe in a blast result directly. This command gets the first 5 results of the blast
 tblastn -db tsa_nt -query query.txt -remote | viewblast.py list -n 5
 """
@@ -67,6 +70,7 @@ contig_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", defa
 list_parser = command_subparser.add_parser("list",help="List the results");
 list_parser.add_argument("-f","--format", help="Format of the response", default="{Hit_id}\t{Hit_def}\t{Hit_hsps/Hsp/Hsp_evalue}\t{Hit_accession}");
 list_parser.add_argument("-n","--max", type=int, help="Number of records to show");
+list_parser.add_argument("-e","--ecutoff", type=str, help="Cut off at at a given E value");
 list_parser.add_argument('blast', type=argparse.FileType('r'), nargs="?", default=sys.stdin, help='the BLAST results file in XML')
 
 
@@ -202,6 +206,8 @@ def list(args):
         hitdef = alignment.find("Hit_def").text;
         accession = alignment.find("Hit_accession").text;
         evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
+        if (args.ecutoff):
+            if (not float(evalue) <= float(args.ecutoff)): continue;
         fstring = args.format.replace("\\t","\t");
         fstring = doFormat(fstring,alignment,{"cover":coverage});
         output.append(fstring.split("\t"));
