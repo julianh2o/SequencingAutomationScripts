@@ -67,7 +67,7 @@ viewblast.py list $BLAST_FILE -f '{Hit_accession}|{Hit_num}|{e}|{Hit_def}|{Hit_h
     if [ ! -f $FASTA_PATH ]; then
         echo "Downloading $FASTA_NAME (e: $E)";
         HEADER="$ACC $DESCRIPTION $HSP_HIT_SCORE $E $HSP_IDENTITY $HSP_ALIGN_LEN"
-        NOHEADER=`fetchaccession.py $ACC | fastafromtraces.sh | tail -n +1`
+        NOHEADER=`fetchaccession.py $ACC | fastafromtraces.sh | tail -n +2`
 
         echo -e ">$HEADER\n$NOHEADER" | translate.py -r $HSP_HIT_FRAME > $FASTA_PATH
         if [ $? -ne 0 ]; then
