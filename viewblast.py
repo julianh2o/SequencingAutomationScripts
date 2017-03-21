@@ -213,7 +213,7 @@ def list(args):
         output.append(fstring.split("\t"));
         if (i == args.max): break;
         i+=1;
-    if (len(output): formatTable(output);
+    if (len(output)): formatTable(output);
 list_parser.set_defaults(func=list);
 
 
