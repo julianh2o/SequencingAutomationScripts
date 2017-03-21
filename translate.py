@@ -127,7 +127,7 @@ def translate(sequence):
     translated = "";
     i=0;
     while(i<len(sequence)):
-        if (len(sequence) < i+3):
+        if (len(sequence) < i+3 or "N" in sequence[i:i+3]):
             translated += "X";
         else:
             translated += mapping[sequence[i:i+3]];
