@@ -28,7 +28,7 @@ DATE=`date +%Y-%m-%d`
 
 echo "//[$DATE] Running diffblast: fasta:$QUERY_FASTA previous:$PREVIOUS ecut:$ECUTOFF output:$OUTPUT_FOLDER,$MAFFT_OUTPUT_FOLDER,$MAFFT_RTF_OUTPUT_FOLDER" >> $PREVIOUS
 
-viewblast.py list $BLAST_FILE -f '{Hit_accession}####{Hit_num}####{e}####{Hit_def}####{Hit_hsps/Hsp/Hsp_bit-score}####{Hit_hsps/Hsp/Hsp_identity}####{Hit_hsps/Hsp/Hsp_align-len}####{Hit_hsps/Hsp/Hsp_hit-frame}####{cover}' #### while read LINE; do
+viewblast.py list $BLAST_FILE -f '{Hit_accession}####{Hit_num}####{e}####{Hit_def}####{Hit_hsps/Hsp/Hsp_bit-score}####{Hit_hsps/Hsp/Hsp_identity}####{Hit_hsps/Hsp/Hsp_align-len}####{Hit_hsps/Hsp/Hsp_hit-frame}####{cover}' | while read LINE; do
     ACC=`echo $LINE | awk -F'####' '{print $1}'`
     INDEX=`echo $LINE | awk -F'####' '{print $2}'`
     E=`echo $LINE | awk -F'####' '{print $3}'`
