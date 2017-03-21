@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Hi Dan, welcome back!"
-echo "To update your scripts.. type "updatescript"
+echo "To update your scripts.. type updatescript"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "Here is a list of scripts you have installed:"
