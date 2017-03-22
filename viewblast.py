@@ -186,7 +186,7 @@ def formatAlignment(args,root,alignment):
     evalue = float(alignment.find("Hit_hsps/Hsp/Hsp_evalue").text);
     fstring = args.format.replace("\\t","\t");
     otherParams = {
-        "e":evalue,
+        "e":str(evalue),
         "cover":coverage,
         "hspCount":str(hspCount),
         "multiframe":multiframe
