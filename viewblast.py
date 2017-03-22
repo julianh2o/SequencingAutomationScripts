@@ -175,7 +175,7 @@ def calculateMultiframe(ecutoff,hsps):
 
 def formatAlignment(args,root,alignment):
     queryLength = int(root.find("BlastOutput_iterations/Iteration/Iteration_query-len").text);
-    isMultiframe = calculateMultiframe(args.ecutoff,alignment.findall("Hit_hsps/Hsp"));
+    isMultiframe = calculateMultiframe(args.ecutoff,alignment.findall("Hit_hsps/Hsp")) if hasattr(args,"ecutoff") else False
     multiframe = "MULTIFRAME" if isMultiframe else "";
     hspCount = len(alignment.find("Hit_hsps").getchildren());
     coverCount = calculateCoverage(alignment.findall("Hit_hsps/Hsp"));
