@@ -31,6 +31,9 @@ As above, but non-matching amino acids are also bolded
 Greys out matching amino acids, colors similar amino acids black, and non-similar ones bold
     formatmafft.py input.fasta -o output.rft -s
 
+Hides completely matching amino acids
+    formatmafft.py input.fasta -o output.rft -x
+
 Underlines the repeats stored in repeats.tsv
     formatmafft.py input.fasta -o output.rft -u repeats.tsv
 
@@ -64,6 +67,7 @@ parser.add_argument('-C', "--colors", default=None, help='Provide custom colors 
 parser.add_argument('-A', "--aminocolors", default=None,help='Provide custom colors for amino acids, same format as -C')
 parser.add_argument('-r', "--reference", type=int, default=1,help='[default: 1] Specify the reference sequence by index')
 
+parser.add_argument('-x', dest="hidematching", action="store_const", const=True, default=False,help='Hide matching amino acids')
 parser.add_argument('-n', dest="nomatch", default="",help='Show nonmatching proteins (accepts "bold", "bg", or "amino". values can combined by comma')
 parser.add_argument('-s', dest="similar", action="store_const", const=True, default=False,help='Show similar proteins')
 parser.add_argument('-a', dest="coloraminoacids", action="store_const", const=True, default=False,help='Color amino acids according to their group')
@@ -226,6 +230,9 @@ def doAlignmentOutput(sequences,regions,ss,write,args):
                 if "amino" in style["special"]:
                     style = appendAminoAcidColoring(style,c,ss);
                     style["special"].remove("amino")
+                if (args.hidematching and c == ref and not isReference):
+                    c = "-";
+                    style = Style({"foreground":2});
                 write(c,style)
             write("\n")
             isReference = False;
@@ -262,6 +269,9 @@ def doFastaOutput(sequences,regions,ss,write,args):
                     style["special"].remove("amino")
                 i+=1
                 if (c == "-"): continue;
+                if (args.hidematching and c == ref and not isReference):
+                    c = "-";
+                    style = Style({"foreground":2});
                 write(c,style)
                 l+=1;
             write("\n")
@@ -373,7 +383,6 @@ def generateStyle(rtf,args):
         style.nonmatch = Style({"bold":True,"foreground":0})
 
     if (rtf):
-
         reservedColors = parseColorString("255,255,255 150,150,150")
         aminoColors = loadColorsOrDefault(args.aminocolors,"0,255,0 255,255,0 255,0,0 0,0,255")
         colorList = loadColorsOrDefault(args.colors,"255,255,0 0,255,255 70,228,70 255,0,255 255,0,0 100,100,255")

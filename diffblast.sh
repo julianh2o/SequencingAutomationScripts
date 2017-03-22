@@ -7,6 +7,7 @@ OUTPUT_FOLDER=$4
 MAFFT_OUTPUT_FOLDER=$5
 MAFFT_RTF_OUTPUT_FOLDER=$6
 ECUTOFF=$7 #1e-100
+MAFFT_FORMAT_PARAMS=$8 #1e-100
 
 viewblast.py list $BLAST_FILE -f '{Hit_accession}' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > CURRENT_ACCESSIONS.txt
 cat $PREVIOUS | sed 's/\/\/.*//g' | sed 's/^[ \t]*//;s/[ \t]*$//' | sort | uniq > PREVIOUS_SORTED.txt
@@ -80,7 +81,7 @@ viewblast.py list $BLAST_FILE -f '{Hit_accession}####{Hit_num}####{e}####{Hit_de
         mafft TMP_MAFFT_INPUT.fasta > $MAFFT_FASTA_PATH 2> /dev/null
 
         ANALYSIS=`alignmentanalysis.py $MAFFT_FASTA_PATH`
-        cat $MAFFT_FASTA_PATH | formatmafft.py --header "$ANALYSIS" -o $MAFFT_RTF_PATH
+        cat $MAFFT_FASTA_PATH | formatmafft.py $MAFFT_FORMAT_PARAMS --header "$ANALYSIS" -o $MAFFT_RTF_PATH
 
         IDENT=`echo -n "$ANALYSIS" | tail -n 1 | awk -F'\t' '{printf("%d%%",100*($4/$3))}'`
         COMMENT="[$DATE] $DESCRIPTION e:$E cover:$COVER ident:$IDENT"
